@@ -1,0 +1,60 @@
+<div class="mc-layout">
+  <!-- Sidebar: room list -->
+  <div class="mc-sidebar">
+    <div class="mc-sidebar-header">
+      <span class="material-icons">forum</span> User Conversations
+      <button class="refresh-btn" (click)="loadRooms()" title="Refresh"><span class="material-icons">refresh</span></button>
+    </div>
+    @if (rooms.length === 0) {
+      <div class="no-rooms">No active conversations yet.</div>
+    }
+    @for (room of rooms; track room.room_id) {
+      <div class="room-item" [class.active]="selectedRoom === room.room_id" (click)="selectRoom(room.room_id)">
+        <div class="room-avatar">
+          <span class="material-icons">person</span>
+          <span class="online-dot" *ngIf="room.online"></span>
+        </div>
+        <div class="room-info">
+          <div class="room-id">{{ room.user_name }}</div>
+          <div class="room-last">{{ room.last_message }}</div>
+        </div>
+        <span class="room-unread" *ngIf="notify.isRoomUnread(room.room_id)"></span>
+      </div>
+    }
+  </div>
+
+  <!-- Chat area -->
+  <div class="mc-chat">
+    @if (!selectedRoom) {
+      <div class="mc-empty">
+        <span class="material-icons">support_agent</span>
+        <p>Select a conversation to start chatting</p>
+      </div>
+    } @else {
+      <div class="mc-chat-header">
+        <span class="material-icons">person</span>
+        <span>{{ selectedRoomName }}</span>
+        <span class="status-badge" [class.online]="connected">{{ statusText }}</span>
+      </div>
+
+      <div class="mc-messages">
+        @for (msg of messages; track $index) {
+          <div class="msg-row" [class.manager]="msg.role === 'manager'" [class.user]="msg.role === 'user'">
+            <div class="msg-bubble">
+              <span class="msg-sender">{{ msg.sender }}</span>
+              {{ msg.content }}
+            </div>
+          </div>
+        }
+        <div #messagesEnd></div>
+      </div>
+
+      <div class="mc-input">
+        <textarea [(ngModel)]="input" (keydown)="onKeydown($event)" placeholder="Reply to user..." rows="1" [disabled]="!connected"></textarea>
+        <button (click)="send()" [disabled]="!input.trim() || !connected">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

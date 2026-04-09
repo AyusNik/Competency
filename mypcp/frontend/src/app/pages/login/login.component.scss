@@ -1,0 +1,111 @@
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 60%, #16213e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .material-icons { color: #fff; font-size: 26px; }
+}
+
+.brand-title { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+.brand-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+.tabs {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 28px;
+  button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    &.active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  }
+}
+
+.field {
+  margin-bottom: 18px;
+  label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    &:focus { border-color: #0f3460; }
+  }
+}
+
+.error-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  .material-icons { font-size: 16px; }
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+  &:disabled { opacity: 0.7; cursor: not-allowed; }
+  &:hover:not(:disabled) { opacity: 0.9; }
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -1,0 +1,141 @@
+<div class="detail-page" *ngIf="assessment">
+
+  <div class="detail-header">
+    <h2 class="detail-title">{{ pageTitle }}</h2>
+    <div class="header-actions">
+      <button class="btn-cancel" (click)="cancel()">CANCEL</button>
+      <button class="btn-save" (click)="save()">SAVE CHANGES</button>
+    </div>
+  </div>
+  <hr />
+
+  <!-- New assessment fields -->
+  <div class="name-row" *ngIf="assessmentId === 'new'">
+    <div class="field">
+      <label>Assessment Type</label>
+      <select [(ngModel)]="assessment.name">
+        <option value="">Select</option>
+        <option value="PLE">PLE – Proficiency Level Exam</option>
+        <option value="CPA">CPA – Competency Performance Assessment</option>
+        <option value="OJT">OJT – On-the-Job Training</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Competency Element</label>
+      <input [(ngModel)]="assessment.competency_element" placeholder="e.g. DSA - Arrays" />
+    </div>
+  </div>
+
+  <!-- Release date (always visible, optional) -->
+  <div class="release-date-row">
+    <div class="field">
+      <label>Release Date <span class="optional">(optional — leave blank to unlock immediately after course completion)</span></label>
+      <input type="date" [(ngModel)]="assessment.release_date" />
+      <button *ngIf="assessment.release_date" class="btn-clear-date" (click)="assessment.release_date = null">Clear</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'expert'" (click)="activeTab = 'expert'">Expert</button>
+    <button class="tab" [class.active]="activeTab === 'advanced'" (click)="activeTab = 'advanced'">Advanced</button>
+  </div>
+
+  <!-- Groups -->
+  <div class="groups-container">
+    <div class="groups-header">
+      <span class="reattain-label">Reattain | {{ assessment.competency_element }}</span>
+      <button class="btn-add-group" (click)="addGroup()">
+        <span class="material-icons">add_circle_outline</span> ADD GROUP
+      </button>
+    </div>
+
+    <div class="group-card" *ngFor="let group of activeGroups; let gi = index">
+      <div class="group-header">
+        <div class="group-name-field">
+          <label>Group Name <span class="required">*</span></label>
+          <input [(ngModel)]="group.group_name" placeholder="e.g. Reattain - Expert" />
+        </div>
+        <div class="group-right">
+          <div class="req-grouping">
+            <label>Requirement grouping</label>
+            <select [(ngModel)]="group.requirement_grouping">
+              <option value="And">And</option>
+              <option value="Or">Or</option>
+            </select>
+          </div>
+          <button class="icon-btn-danger" (click)="removeGroup(gi)">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="req-item" *ngFor="let item of group.items; let ii = index">
+        <div class="req-item-header">
+          <span class="min-req-label">Minimum Requirements</span>
+          <select class="min-select" [(ngModel)]="item.min_requirements">
+            <option *ngFor="let n of minOptions(item)" [value]="n">{{ n }}</option>
+          </select>
+          <span class="of-label">of {{ item.exams.length }}</span>
+          <button class="icon-btn-sm" (click)="removeItem(gi, ii)">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+
+        <div class="exams-row">
+          <span class="exam-chip" *ngFor="let exam of item.exams">
+            {{ exam }}
+            <span class="material-icons chip-link" (click)="openILearnAssessment(exam)" title="Open in ILearn">open_in_new</span>
+            <span class="chip-remove" (click)="removeExam(gi, ii, exam)">✕</span>
+          </span>
+          <button class="btn-add-item" (click)="openPicker(gi, ii)">
+            <span class="material-icons">add_circle_outline</span> ADD NEW ITEM
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-groups" *ngIf="activeGroups.length === 0">
+      <p>No groups yet. Click <strong>+ ADD GROUP</strong> to start.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ILearn Assessment Picker -->
+<div class="overlay" *ngIf="showPickerFor !== null" (click)="showPickerFor = null">
+  <div class="picker-modal" (click)="$event.stopPropagation()">
+    <div class="picker-header">
+      <h4>Select ILearn Assessment</h4>
+      <span class="ilearn-badge">🎓 ILearn</span>
+    </div>
+    <input
+      [(ngModel)]="examSearch"
+      (input)="onExamSearch()"
+      placeholder="Search by title, type, competency..."
+      class="picker-search"
+      autofocus
+    />
+    <div class="assessment-list">
+      <div
+        class="assessment-option"
+        *ngFor="let a of filteredAssessments"
+        (click)="selectAssessment(a)"
+      >
+        <div class="type-icon type-{{ a.type }}">{{ a.type }}</div>
+        <div class="assessment-info">
+          <div class="assessment-title">{{ a.title }}</div>
+          <div class="assessment-meta">
+            <span class="badge-ce">{{ a.competency_element }}</span>
+            <span class="badge-level">{{ a.level }}</span>
+            <span class="badge-dur">⏱ {{ a.duration }}</span>
+          </div>
+          <div class="exam-cat-name">{{ a.cat_exam_name }}</div>
+        </div>
+      </div>
+      <div class="no-results" *ngIf="filteredAssessments.length === 0">No assessments found.</div>
+    </div>
+    <div class="picker-actions">
+      <button class="btn-cancel" (click)="showPickerFor = null">Cancel</button>
+    </div>
+  </div>
+</div>

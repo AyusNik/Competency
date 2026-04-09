@@ -1,0 +1,96 @@
+<button class="chat-bubble" (click)="toggle()" [class.open]="open">
+  <span class="material-icons">{{ open ? 'close' : 'smart_toy' }}</span>
+</button>
+
+@if (open) {
+  <div class="chat-panel">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="bot-avatar">
+          <span class="material-icons">{{ managerMode ? 'support_agent' : 'smart_toy' }}</span>
+        </div>
+        <div>
+          <div class="bot-name">{{ managerMode ? 'Business Line Manager' : 'MyPCP Assistant' }}</div>
+          <div class="bot-status">
+            <span class="status-dot" [class.offline]="managerMode && !managerConnected"></span>
+            {{ managerMode ? (managerConnected ? 'Live Chat' : 'Connecting...') : 'Online' }}
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        @if (managerMode) {
+          <button class="end-btn" (click)="disconnectManager()" title="End manager chat">
+            <span class="material-icons">call_end</span>
+          </button>
+        }
+        <button class="clear-btn" (click)="clearChat()" title="Clear chat">
+          <span class="material-icons">delete_outline</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages">
+      @if (messages.length === 0) {
+        <div class="welcome">
+          <span class="material-icons welcome-icon">waving_hand</span>
+          <p>Hi! I'm your MyPCP Assistant.</p>
+          <p class="welcome-sub">Ask me anything, or say <strong>"talk to manager"</strong> to connect with your Business Line Manager.</p>
+        </div>
+      }
+
+      @for (msg of messages; track $index) {
+        @if (msg.role === 'system') {
+          <div class="system-msg">{{ msg.content }}</div>
+        } @else {
+          <div class="msg-row" [class.user]="msg.role === 'user'"
+               [class.bot]="msg.role === 'assistant'"
+               [class.manager]="msg.role === 'manager'">
+            @if (msg.role === 'assistant') {
+              <div class="msg-avatar"><span class="material-icons">smart_toy</span></div>
+            }
+            @if (msg.role === 'manager') {
+              <div class="msg-avatar manager-avatar"><span class="material-icons">support_agent</span></div>
+            }
+            <div class="msg-bubble">
+              @if (msg.role === 'manager') {
+                <span class="msg-sender">{{ msg.sender }}</span>
+              }
+              {{ msg.content }}
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Connect to Manager prompt removed - auto-triggered -->
+
+      @if (loading) {
+        <div class="msg-row bot">
+          <div class="msg-avatar"><span class="material-icons">smart_toy</span></div>
+          <div class="msg-bubble typing"><span></span><span></span><span></span></div>
+        </div>
+      }
+      <div #messagesEnd></div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input">
+      <textarea
+        [(ngModel)]="input"
+        (keydown)="onKeydown($event)"
+        [placeholder]="recording ? 'Listening...' : (managerMode ? 'Message your manager...' : 'Ask me anything...')"
+        rows="1"
+        [disabled]="loading || (managerMode && !managerConnected)"
+      ></textarea>
+      @if (micSupported) {
+        <button class="mic-btn" (click)="toggleMic()" [class.recording]="recording" [disabled]="loading || (managerMode && !managerConnected)" title="{{ recording ? 'Stop recording' : 'Speak' }}">
+          <span class="material-icons">{{ recording ? 'stop' : 'mic' }}</span>
+        </button>
+      }
+      <button class="send-btn" (click)="send()" [disabled]="!input.trim() || loading || (managerMode && !managerConnected)">
+        <span class="material-icons">send</span>
+      </button>
+    </div>
+  </div>
+}

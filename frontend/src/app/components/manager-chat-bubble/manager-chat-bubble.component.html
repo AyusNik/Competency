@@ -1,0 +1,86 @@
+<!-- Floating bubble button -->
+<button class="mgr-bubble" (click)="toggle()" [class.open]="open" *ngIf="auth.isLoggedIn()">
+  <span class="material-icons">support_agent</span>
+  <span class="bubble-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+</button>
+
+<!-- Chat panel -->
+@if (open && auth.isLoggedIn()) {
+  <div class="mgr-panel">
+
+    <!-- Header -->
+    <div class="mgr-header">
+      <span class="material-icons">support_agent</span>
+      <span class="mgr-title">{{ activeRoom ? activeRoom.user_name : 'User Chats' }}</span>
+      @if (activeRoom) {
+        <span class="status-badge" [class.online]="connected">{{ statusText }}</span>
+        <button class="leave-btn" (click)="leaveRoom()" title="Leave & end chat">
+          <span class="material-icons">call_end</span>
+        </button>
+      }
+      <button class="close-btn" (click)="toggle()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Room list view -->
+    @if (!activeRoom) {
+      <div class="mgr-rooms">
+        @if (rooms.length === 0) {
+          <div class="empty-rooms">
+            <span class="material-icons">inbox</span>
+            <p>No pending user chats</p>
+          </div>
+        }
+        @for (room of rooms; track room.room_id) {
+          <div class="room-row">
+            <div class="room-avatar">
+              <span class="material-icons">person</span>
+              <span class="online-dot" *ngIf="room.online"></span>
+            </div>
+            <div class="room-info">
+              <div class="room-name">{{ room.user_name }}</div>
+              <div class="room-last">{{ room.last_message }}</div>
+            </div>
+            <button class="join-btn" (click)="joinRoom(room)">
+              <span class="material-icons">login</span> Join
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Active chat view -->
+    @if (activeRoom) {
+      <div class="mgr-messages">
+        @for (msg of messages; track $index) {
+          @if (msg.role === 'status') {
+            <div class="system-msg">{{ msg.content }}</div>
+          } @else {
+            <div class="msg-row" [class.manager]="msg.role === 'manager'" [class.user]="msg.role === 'user'">
+              <div class="msg-bubble">
+                <span class="msg-sender">{{ msg.sender }}</span>
+                {{ msg.content }}
+              </div>
+            </div>
+          }
+        }
+        <div #messagesEnd></div>
+      </div>
+
+      <div class="mgr-input">
+        <textarea
+          [(ngModel)]="input"
+          (keydown)="onKeydown($event)"
+          placeholder="Reply to user..."
+          rows="1"
+          [disabled]="!connected"
+        ></textarea>
+        <button (click)="send()" [disabled]="!input.trim() || !connected">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+    }
+
+  </div>
+}

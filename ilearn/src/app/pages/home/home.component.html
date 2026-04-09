@@ -1,0 +1,68 @@
+<div class="hero">
+  <div class="hero-content">
+    <h1>Learn. Grow. <span class="accent">Excel.</span></h1>
+    <p>Access world-class courses and assessments mapped to your competency framework.</p>
+    <div class="hero-actions">
+      <a routerLink="/courses" class="btn-primary">Browse Courses</a>
+      <a routerLink="/assessments" class="btn-outline">Take Assessments</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num">{{ stats.total_courses || 0 }}</span>
+      <span class="stat-label">Courses</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ stats.total_assessments || 0 }}</span>
+      <span class="stat-label">Assessments</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{{ (stats.categories || []).length }}</span>
+      <span class="stat-label">Categories</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    <h2>Featured Courses</h2>
+    <a routerLink="/courses" class="see-all">See all →</a>
+  </div>
+  <div class="cards-grid">
+    <a class="course-card" *ngFor="let c of featuredCourses" [routerLink]="['/courses', c._id]">
+      <div class="card-thumb">
+        <img [src]="c.thumbnail" [alt]="c.title" (error)="c.thumbnail=''" />
+        <span class="type-badge type-{{ c.type }}">
+          <span class="material-icons">{{ c.type === 'video' ? 'play_circle' : 'article' }}</span>
+          {{ c.type }}
+        </span>
+      </div>
+      <div class="card-body">
+        <span class="category-tag">{{ c.category }}</span>
+        <h3>{{ c.title }}</h3>
+        <p>{{ c.description | slice:0:80 }}...</p>
+        <div class="card-meta">
+          <span><span class="material-icons">schedule</span>{{ c.duration }}</span>
+          <span class="level level-{{ c.level?.toLowerCase() }}">{{ c.level }}</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="section section--dark">
+  <div class="section-header">
+    <h2>Assessments</h2>
+    <a routerLink="/assessments" class="see-all">See all →</a>
+  </div>
+  <div class="assess-list">
+    <a class="assess-card" *ngFor="let a of featuredAssessments" [routerLink]="['/assessments', a._id]">
+      <div class="assess-icon type-{{ a.type }}">{{ a.type }}</div>
+      <div class="assess-body">
+        <h3>{{ a.title }}</h3>
+        <p>{{ a.competency_element }} · {{ a.duration }} · {{ a.questions }} questions</p>
+      </div>
+      <span class="material-icons arrow">arrow_forward</span>
+    </a>
+  </div>
+</div>

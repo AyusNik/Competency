@@ -1,0 +1,28 @@
+<header class="top-bar">
+  <div class="top-bar__left">
+    <div class="logo">
+      <span class="logo__icon">slb</span>
+    </div>
+    <span class="app-title">CAT</span>
+    <div class="nav-icons">
+      <span class="material-icons">expand_less</span>
+      <span class="material-icons">home</span>
+    </div>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">{{ breadcrumb }}</span>
+  </div>
+  <div class="top-bar__right">
+    <span class="user-name">{{ auth.getName() }}</span>
+    <span class="material-icons user-icon">account_circle</span>
+    <button class="logout-btn" (click)="auth.logout()">Logout</button>
+  </div>
+</header>
+
+<nav class="sub-nav">
+  <a routerLink="/content-management" routerLinkActive="active" class="sub-nav__link">
+    <span class="material-icons">school</span> Content Management
+  </a>
+  <a routerLink="/fixed-step-management" routerLinkActive="active" class="sub-nav__link">
+    <span class="material-icons">settings</span> Fixed Step Management
+  </a>
+</nav>

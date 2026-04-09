@@ -1,0 +1,104 @@
+<div class="page">
+  <h2 class="page-title">Content Management</h2>
+  <hr />
+
+  <div class="card">
+    <div class="toolbar">
+      <span class="filter-label">Filtered By</span>
+      <div class="search-box">
+        <input type="text" placeholder="Search" [(ngModel)]="searchTerm" (input)="onSearch()" />
+        <span class="material-icons">search</span>
+      </div>
+      <button class="filter-btn" title="Filters">
+        <span class="material-icons">tune</span>
+      </button>
+      <button class="add-btn" (click)="openAdd()">+ Add Mapping</button>
+      <button class="add-btn add-btn--secondary" (click)="newTraining()">+ New Training</button>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>CE Unit</th>
+          <th>Competency Element</th>
+          <th>PLRTable</th>
+          <th>Training Mapping</th>
+          <th>Assessments Mapping</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of mappings">
+          <td>{{ m.ce_unit }}</td>
+          <td class="ce-link">{{ m.competency_element }}</td>
+          <td>{{ m.plr_table }}</td>
+          <td>
+            <span class="badge badge--outline badge--clickable" *ngFor="let t of m.training_ids" (click)="openTraining(t)" [title]="trainingName(t)">T</span>
+          </td>
+          <td>
+            <span class="badge badge--outline badge--clickable"
+              *ngFor="let a of m.assessment_types; let i = index"
+              (click)="m.assessment_ids?.[i] && openAssessment(m.assessment_ids[i])"
+              [title]="a">{{ a }}</span>
+          </td>
+          <td class="actions">
+            <button class="icon-btn" (click)="openEdit(m)" title="Edit">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn icon-btn--danger" (click)="delete(m._id)" title="Delete">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="mappings.length === 0">
+          <td colspan="6" class="empty">No records found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal=false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>{{ editingId ? 'Edit' : 'Add' }} Content Mapping</h3>
+
+    <label>CE Unit</label>
+    <input [(ngModel)]="form.ce_unit" placeholder="e.g. Conveyance" />
+
+    <label>Competency Element</label>
+    <input [(ngModel)]="form.competency_element" placeholder="e.g. Caliper - Execution" />
+
+    <label>PLR Table Level</label>
+    <select [(ngModel)]="form.plr_table">
+      <option value="">Select</option>
+      <option *ngFor="let l of ['A','B','C','D','E']" [value]="l">{{ l }}</option>
+    </select>
+
+    <label>Training Mappings</label>
+    <div class="training-list">
+      <label *ngFor="let t of trainings" class="checkbox-label">
+        <input type="checkbox" [checked]="form.training_ids.includes(t._id)" (change)="toggleTraining(t._id)" />
+        {{ t.name }}
+      </label>
+      <span *ngIf="trainings.length === 0" class="no-trainings">No trainings yet.
+        <a (click)="showModal=false; newTraining()" class="link">Create one</a>
+      </span>
+    </div>
+
+    <label>Assessment Mappings</label>
+    <div class="training-list">
+      <label *ngFor="let a of allAssessments" class="checkbox-label">
+        <input type="checkbox" [checked]="form.assessment_ids.includes(a._id)" (change)="toggleAssessment(a._id, a.name)" />
+        <span class="badge-inline badge-inline--{{ a.name.toLowerCase() }}">{{ a.name }}</span>
+        {{ a.competency_element }}
+      </label>
+      <span *ngIf="allAssessments.length === 0" class="no-trainings">No assessments seeded yet.</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="showModal=false">Cancel</button>
+      <button class="btn-save" (click)="save()">Save</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,58 @@
+<div class="page-header">
+  <h1>Assessments</h1>
+  <p>Proficiency exams and competency assessments mapped to your learning path</p>
+</div>
+
+<div class="page-body">
+  <div class="filters">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input type="text" placeholder="Search assessments..." [(ngModel)]="search" (input)="onSearch()" />
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Category</label>
+        <div class="pills">
+          <button *ngFor="let cat of categories" class="pill" [class.active]="selectedCategory === cat" (click)="onCategory(cat)">{{ cat }}</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Type</label>
+        <div class="pills">
+          <button *ngFor="let t of types" class="pill type-pill type-{{ t }}" [class.active]="selectedType === t" (click)="onType(t)">{{ t }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <span class="material-icons spin">refresh</span> Loading...
+  </div>
+
+  <div class="results-info" *ngIf="!loading">{{ assessments.length }} assessment{{ assessments.length !== 1 ? 's' : '' }} found</div>
+
+  <div class="assess-grid" *ngIf="!loading">
+    <a class="assess-card" *ngFor="let a of assessments" [routerLink]="['/assessments', a._id]">
+      <div class="assess-header">
+        <div class="type-icon type-{{ a.type }}">{{ a.type }}</div>
+        <span class="level level-{{ a.level?.toLowerCase() }}">{{ a.level }}</span>
+      </div>
+      <h3>{{ a.title }}</h3>
+      <p>{{ a.description | slice:0:100 }}...</p>
+      <div class="assess-meta">
+        <span><span class="material-icons">category</span>{{ a.competency_element }}</span>
+        <span><span class="material-icons">schedule</span>{{ a.duration }}</span>
+        <span><span class="material-icons">quiz</span>{{ a.questions }} questions</span>
+      </div>
+      <div class="assess-footer">
+        <span class="category-tag">{{ a.category }}</span>
+        <span class="start-btn">Start <span class="material-icons">arrow_forward</span></span>
+      </div>
+    </a>
+
+    <div class="empty" *ngIf="assessments.length === 0">
+      <span class="material-icons">quiz</span>
+      <p>No assessments found.</p>
+    </div>
+  </div>
+</div>

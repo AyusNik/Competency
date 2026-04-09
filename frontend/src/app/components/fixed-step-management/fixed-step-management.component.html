@@ -1,0 +1,64 @@
+<div class="page">
+  <h2 class="page-title">Fixed Step Management</h2>
+  <hr />
+
+  <div class="card">
+    <div class="section-title">
+      <span class="material-icons">school</span> Competencies — Promotion Tiers
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Competency</th>
+          <th>Description</th>
+          <th>Order</th>
+          <th>Promotion From</th>
+          <th>Promotion To</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let comp of competencies">
+          <ng-container *ngIf="editingId !== comp._id">
+            <td class="comp-name">{{ comp.name }}</td>
+            <td class="desc">{{ comp.description || '—' }}</td>
+            <td><span class="order-badge">{{ comp.order ?? 0 }}</span></td>
+            <td>
+              <span class="role-badge from" *ngIf="comp.promotion_from">{{ comp.promotion_from }}</span>
+              <span class="empty-val" *ngIf="!comp.promotion_from">—</span>
+            </td>
+            <td>
+              <span class="role-badge to" *ngIf="comp.promotion_to">{{ comp.promotion_to }}</span>
+              <span class="empty-val" *ngIf="!comp.promotion_to">—</span>
+            </td>
+            <td class="actions">
+              <button class="icon-btn" (click)="startEdit(comp)" title="Edit">
+                <span class="material-icons">edit</span>
+              </button>
+            </td>
+          </ng-container>
+
+          <ng-container *ngIf="editingId === comp._id">
+            <td><input class="inline-input" [(ngModel)]="editForm.name" /></td>
+            <td><input class="inline-input" [(ngModel)]="editForm.description" placeholder="Description" /></td>
+            <td><input class="inline-input inline-input--sm" type="number" [(ngModel)]="editForm.order" placeholder="0" /></td>
+            <td><input class="inline-input" [(ngModel)]="editForm.promotion_from" placeholder="e.g. Assistant Engineer" /></td>
+            <td><input class="inline-input" [(ngModel)]="editForm.promotion_to" placeholder="e.g. Senior Software Engineer" /></td>
+            <td class="actions">
+              <button class="icon-btn icon-btn--save" (click)="save(comp)" [disabled]="saving" title="Save">
+                <span class="material-icons">check</span>
+              </button>
+              <button class="icon-btn icon-btn--cancel" (click)="cancelEdit()" title="Cancel">
+                <span class="material-icons">close</span>
+              </button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="competencies.length === 0">
+          <td colspan="5" class="empty">No competencies found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

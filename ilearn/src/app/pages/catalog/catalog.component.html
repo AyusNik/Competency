@@ -1,0 +1,53 @@
+<div class="page-header">
+  <h1>Course Catalog</h1>
+  <p>Browse all courses mapped to your competency framework</p>
+</div>
+
+<div class="page-body">
+  <div class="filters">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input type="text" placeholder="Search courses..." [(ngModel)]="search" (input)="onSearch()" />
+    </div>
+    <div class="category-pills">
+      <button *ngFor="let cat of categories" class="pill" [class.active]="selectedCategory === cat" (click)="onCategory(cat)">
+        {{ cat }}
+      </button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <span class="material-icons spin">refresh</span> Loading...
+  </div>
+
+  <div class="results-info" *ngIf="!loading">{{ courses.length }} course{{ courses.length !== 1 ? 's' : '' }} found</div>
+
+  <div class="cards-grid" *ngIf="!loading">
+    <a class="course-card" *ngFor="let c of courses" [routerLink]="['/courses', c._id]">
+      <div class="card-thumb">
+        <img [src]="c.thumbnail" [alt]="c.title" (error)="c.thumbnail=''" />
+        <span class="type-badge type-{{ c.type }}">
+          <span class="material-icons">{{ c.type === 'video' ? 'play_circle' : 'article' }}</span>
+          {{ c.type }}
+        </span>
+      </div>
+      <div class="card-body">
+        <span class="category-tag">{{ c.category }}</span>
+        <h3>{{ c.title }}</h3>
+        <p>{{ c.description | slice:0:90 }}...</p>
+        <div class="instructor">
+          <span class="material-icons">person</span> {{ c.instructor }}
+        </div>
+        <div class="card-meta">
+          <span><span class="material-icons">schedule</span>{{ c.duration }}</span>
+          <span class="level level-{{ c.level?.toLowerCase() }}">{{ c.level }}</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="empty" *ngIf="courses.length === 0">
+      <span class="material-icons">search_off</span>
+      <p>No courses found. Try a different search.</p>
+    </div>
+  </div>
+</div>

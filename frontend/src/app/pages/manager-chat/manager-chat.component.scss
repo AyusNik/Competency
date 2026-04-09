@@ -1,0 +1,149 @@
+.mc-layout {
+  display: flex;
+  height: calc(100vh - 100px);
+  background: #f1f5f9;
+}
+
+.mc-sidebar {
+  width: 280px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.mc-sidebar-header {
+  padding: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e3a8a;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  .material-icons { font-size: 20px; }
+  .refresh-btn { margin-left: auto; border: none; background: transparent; cursor: pointer; color: #6b7280;
+    .material-icons { font-size: 18px; } &:hover { color: #1e3a8a; } }
+}
+
+.no-rooms { padding: 24px 16px; color: #9ca3af; font-size: 13px; text-align: center; }
+
+.room-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+  &:hover { background: #f8fafc; }
+  &.active { background: #eff6ff; border-left: 3px solid #2563eb; }
+}
+
+.room-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: #dbeafe;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  position: relative;
+  .material-icons { font-size: 20px; color: #2563eb; }
+}
+
+.online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #22c55e; border: 2px solid #fff;
+}
+
+.room-info { overflow: hidden; }
+.room-id { font-size: 13px; font-weight: 500; color: #1f2937; }
+.room-last { font-size: 11px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.room-unread {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #ef4444; flex-shrink: 0; margin-left: auto;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.mc-chat {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+
+.mc-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #9ca3af; gap: 12px;
+  .material-icons { font-size: 56px; color: #d1d5db; }
+  p { font-size: 14px; }
+}
+
+.mc-chat-header {
+  padding: 14px 20px; background: #fff; border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: #1f2937;
+  .material-icons { font-size: 20px; color: #2563eb; }
+}
+
+.status-badge {
+  margin-left: auto; font-size: 11px; padding: 2px 10px; border-radius: 12px;
+  background: #f3f4f6; color: #6b7280;
+  &.online { background: #dcfce7; color: #16a34a; }
+}
+
+.mc-messages {
+  flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+}
+
+.msg-row {
+  display: flex;
+  &.manager { justify-content: flex-end; }
+  &.user { justify-content: flex-start; }
+}
+
+.msg-row.user .msg-bubble {
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 4px;
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.msg-row.manager .msg-bubble {
+  background: #1e3a8a;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.msg-bubble {
+  max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5;
+}
+
+.msg-sender { display: block; font-size: 10px; font-weight: 600; margin-bottom: 3px; opacity: 0.75; }
+
+.mc-input {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #fff;
+  textarea {
+    flex: 1; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 9px 12px;
+    font-size: 13px; font-family: inherit; resize: none; outline: none;
+    &:focus { border-color: #2563eb; }
+    &:disabled { background: #f9fafb; }
+  }
+  button {
+    width: 38px; height: 38px; border: none; border-radius: 8px;
+    background: #1e3a8a; color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    .material-icons { font-size: 18px; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    &:hover:not(:disabled) { background: #1d4ed8; }
+  }
+}

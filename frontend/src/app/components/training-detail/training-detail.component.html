@@ -1,0 +1,123 @@
+<div class="detail-page" *ngIf="training">
+
+  <!-- Header -->
+  <div class="detail-header">
+    <h2 class="detail-title">Training | {{ training.name || 'New Training' }}</h2>
+    <div class="header-actions">
+      <button class="btn-cancel" (click)="cancel()">CANCEL</button>
+      <button class="btn-save" (click)="save()">SAVE CHANGES</button>
+    </div>
+  </div>
+  <hr />
+
+  <!-- Name field for new -->
+  <div class="name-row" *ngIf="trainingId === 'new'">
+    <label>Training Name</label>
+    <input [(ngModel)]="training.name" placeholder="e.g. Caliper Training" class="name-input" />
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'basic'" (click)="activeTab = 'basic'">Basic</button>
+    <button class="tab" [class.active]="activeTab === 'advanced'" (click)="activeTab = 'advanced'">Advanced</button>
+  </div>
+
+  <!-- Groups container -->
+  <div class="groups-container">
+    <div class="groups-header">
+      <span class="attain-label">Attain |</span>
+      <button class="btn-add-group" (click)="addGroup()">
+        <span class="material-icons">add_circle_outline</span> ADD GROUP
+      </button>
+    </div>
+
+    <div class="group-card" *ngFor="let group of activeGroups; let gi = index">
+      <div class="group-header">
+        <div class="group-name-field">
+          <label>Group Name <span class="required">*</span></label>
+          <input [(ngModel)]="group.group_name" placeholder="e.g. AttainBasic - Training" />
+        </div>
+        <div class="group-right">
+          <div class="req-grouping">
+            <label>Requirement grouping</label>
+            <select [(ngModel)]="group.requirement_grouping">
+              <option value="And">And</option>
+              <option value="Or">Or</option>
+            </select>
+          </div>
+          <button class="icon-btn-danger" (click)="removeGroup(gi)" title="Delete group">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Requirement Items -->
+      <div class="req-item" *ngFor="let item of group.items; let ii = index">
+        <div class="req-item-header">
+          <span class="min-req-label">Minimum Requirements</span>
+          <select class="min-select" [(ngModel)]="item.min_requirements">
+            <option *ngFor="let n of minOptions(item)" [value]="n">{{ n }}</option>
+          </select>
+          <span class="of-label">of {{ item.courses.length }}</span>
+          <button class="icon-btn-sm" (click)="removeItem(gi, ii)" title="Delete item">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+
+        <div class="courses-row">
+          <span class="course-chip" *ngFor="let course of item.courses">
+            {{ course }}
+            <span class="material-icons chip-link" (click)="openILearnCourse(course)" title="Open in ILearn">open_in_new</span>
+            <span class="chip-remove" (click)="removeCourse(gi, ii, course)">✕</span>
+          </span>
+          <button class="btn-add-item" (click)="openCoursePicker(gi, ii)">
+            <span class="material-icons">add_circle_outline</span> ADD NEW ITEM
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-groups" *ngIf="activeGroups.length === 0">
+      <p>No groups yet. Click <strong>+ ADD GROUP</strong> to start.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ILearn Course Picker Overlay -->
+<div class="overlay" *ngIf="showCoursePickerFor !== null" (click)="showCoursePickerFor = null">
+  <div class="picker-modal" (click)="$event.stopPropagation()">
+    <div class="picker-header">
+      <h4>Select ILearn Course</h4>
+      <span class="ilearn-badge">🎓 ILearn</span>
+    </div>
+    <input
+      [(ngModel)]="courseSearch"
+      (input)="onCourseSearch()"
+      placeholder="Search by title, category..."
+      class="picker-search"
+      autofocus
+    />
+    <div class="course-list">
+      <div
+        class="course-option"
+        *ngFor="let c of filteredCourses"
+        (click)="selectCourse(c)"
+      >
+        <img [src]="c.thumbnail" [alt]="c.title" class="course-thumb" />
+        <div class="course-info">
+          <div class="course-title">{{ c.title }}</div>
+          <div class="course-meta">
+            <span class="badge-type type-{{ c.type }}">{{ c.type }}</span>
+            <span class="badge-level">{{ c.level }}</span>
+            <span class="badge-cat">{{ c.category }}</span>
+          </div>
+          <div class="course-cat-name">{{ c.cat_course_name }}</div>
+        </div>
+      </div>
+      <div class="no-results" *ngIf="filteredCourses.length === 0">No courses found.</div>
+    </div>
+    <div class="picker-actions">
+      <button class="btn-cancel" (click)="showCoursePickerFor = null">Cancel</button>
+    </div>
+  </div>
+</div>

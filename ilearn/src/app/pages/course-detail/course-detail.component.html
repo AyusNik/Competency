@@ -1,0 +1,83 @@
+<div class="loading-state" *ngIf="loading">
+  <span class="material-icons spin">refresh</span> Loading...
+</div>
+
+<div class="error-state" *ngIf="error">
+  <span class="material-icons">error_outline</span>
+  <p>{{ error }}</p>
+  <a routerLink="/courses" class="btn-back">← Back to Courses</a>
+</div>
+
+<!-- Course Not Available -->
+<div class="unavailable-state" *ngIf="course && !loading && course.available === false">
+  <div class="unavailable-card">
+    <span class="material-icons unavailable-icon">lock</span>
+    <h2>Course Not Available</h2>
+    <p class="unavailable-title">{{ course.title }}</p>
+    <p class="unavailable-msg">This course is currently unavailable. Please contact your Business Line Manager or reach out via the MyPCP chatbot for assistance.</p>
+    <a routerLink="/courses" class="btn-back">← Back to Courses</a>
+  </div>
+</div>
+
+<div class="detail-page" *ngIf="course && !loading && course.available !== false">
+  <div class="detail-hero">
+    <div class="hero-content">
+      <a routerLink="/courses" class="back-link">← Back to Courses</a>
+      <span class="category-tag">{{ course.category }}</span>
+      <h1>{{ course.title }}</h1>
+      <p class="desc">{{ course.description }}</p>
+      <div class="meta-row">
+        <span><span class="material-icons">person</span>{{ course.instructor }}</span>
+        <span><span class="material-icons">schedule</span>{{ course.duration }}</span>
+        <span class="level level-{{ course.level?.toLowerCase() }}">{{ course.level }}</span>
+        <span class="type-chip type-{{ course.type }}">
+          <span class="material-icons">{{ course.type === 'video' ? 'play_circle' : 'article' }}</span>
+          {{ course.type }}
+        </span>
+      </div>
+      <a [href]="course.url" target="_blank" class="btn-launch">
+        <span class="material-icons">{{ course.type === 'video' ? 'play_arrow' : 'open_in_new' }}</span>
+        {{ course.type === 'video' ? 'Watch on YouTube' : 'Open Resource' }}
+      </a>
+    </div>
+    <div class="hero-thumb">
+      <img *ngIf="course.thumbnail" [src]="course.thumbnail" [alt]="course.title" />
+    </div>
+  </div>
+
+  <!-- YouTube embed -->
+  <div class="embed-section" *ngIf="isYoutube(course.url)">
+    <h2>Preview</h2>
+    <div class="video-wrapper">
+      <iframe [src]="getYoutubeEmbed(course.url) | trustUrl" frameborder="0" allowfullscreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        (load)="onIframeLoad($event)">
+      </iframe>
+      <div class="content-unavailable-banner" *ngIf="contentUnavailable">
+        <span class="material-icons">videocam_off</span>
+        <div>
+          <strong>Course content is not visible</strong>
+          <p>The video for this course could not be loaded.</p>
+        </div>
+        <a class="raise-ticket-btn" href="http://localhost:4202" target="_blank"
+           (click)="setTicketMessage(course.title)">
+          <span class="material-icons">confirmation_number</span> Raise a Ticket
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAT Mappings -->
+  <div class="mappings-section" *ngIf="course.mapped_trainings?.length">
+    <h2>Mapped in CAT Trainings</h2>
+    <div class="mapping-chips">
+      <div class="mapping-chip" *ngFor="let m of course.mapped_trainings">
+        <span class="material-icons">school</span>
+        <div>
+          <strong>{{ m.training_name }}</strong>
+          <span>{{ m.group }} · {{ m.tab }} tab</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

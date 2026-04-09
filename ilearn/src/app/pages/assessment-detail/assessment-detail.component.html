@@ -1,0 +1,58 @@
+<div class="loading-state" *ngIf="loading">
+  <span class="material-icons spin">refresh</span> Loading...
+</div>
+
+<div class="error-state" *ngIf="error">
+  <span class="material-icons">error_outline</span>
+  <p>{{ error }}</p>
+  <a routerLink="/assessments" class="btn-back">← Back to Assessments</a>
+</div>
+
+<div class="detail-page" *ngIf="assessment && !loading">
+  <div class="detail-hero type-bg-{{ assessment.type }}">
+    <div class="hero-inner">
+      <a routerLink="/assessments" class="back-link">← Back to Assessments</a>
+      <div class="type-badge type-{{ assessment.type }}">{{ assessment.type }}</div>
+      <h1>{{ assessment.title }}</h1>
+      <p class="desc">{{ assessment.description }}</p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="material-icons">category</span>
+          <div><label>Competency</label><span>{{ assessment.competency_element }}</span></div>
+        </div>
+        <div class="meta-item">
+          <span class="material-icons">schedule</span>
+          <div><label>Duration</label><span>{{ assessment.duration }}</span></div>
+        </div>
+        <div class="meta-item">
+          <span class="material-icons">quiz</span>
+          <div><label>Questions</label><span>{{ assessment.questions }}</span></div>
+        </div>
+        <div class="meta-item">
+          <span class="material-icons">bar_chart</span>
+          <div><label>Level</label><span>{{ assessment.level }}</span></div>
+        </div>
+      </div>
+
+      <a [href]="assessment.url" target="_blank" class="btn-launch">
+        <span class="material-icons">open_in_new</span>
+        Start Assessment
+      </a>
+    </div>
+  </div>
+
+  <!-- CAT cross-reference -->
+  <div class="mappings-section" *ngIf="assessment.mapped_cat_assessments?.length">
+    <h2>Mapped in CAT System</h2>
+    <div class="mapping-chips">
+      <div class="mapping-chip" *ngFor="let m of assessment.mapped_cat_assessments">
+        <div class="chip-icon type-{{ m.type }}">{{ m.type }}</div>
+        <div>
+          <strong>{{ m.competency_element }}</strong>
+          <span>CAT Assessment Type: {{ m.type }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

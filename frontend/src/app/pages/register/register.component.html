@@ -1,0 +1,31 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>CAT Portal</h2>
+    <p class="subtitle">Manager Registration</p>
+    <div *ngIf="error" class="error">{{ error }}</div>
+    <form (ngSubmit)="submit()">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" [(ngModel)]="name" name="name" required placeholder="Enter your name" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="email" name="email" required placeholder="Enter your email" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password" required placeholder="Create a password" />
+      </div>
+      <div class="field">
+        <label>Job Title</label>
+        <input type="text" [(ngModel)]="manager_title" name="manager_title" required placeholder="e.g. Business Line Manager — DSA" />
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="text" [(ngModel)]="manager_phone" name="manager_phone" placeholder="e.g. +91 9876543210" />
+      </div>
+      <button type="submit" [disabled]="loading">{{ loading ? 'Registering...' : 'Register' }}</button>
+    </form>
+    <p class="switch">Already have an account? <a routerLink="/login">Login</a></p>
+  </div>
+</div>

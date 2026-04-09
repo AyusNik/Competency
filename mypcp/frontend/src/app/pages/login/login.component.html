@@ -1,0 +1,50 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="material-icons">hub</span>
+      </div>
+      <div>
+        <div class="brand-title">MyPCP</div>
+        <div class="brand-sub">Personal Competency Portal</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button [class.active]="mode==='login'" (click)="mode='login'; error=''">Sign In</button>
+      <button [class.active]="mode==='register'" (click)="mode='register'; error=''">Register</button>
+    </div>
+
+    <form (ngSubmit)="submit()">
+      @if (mode === 'register') {
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="name" name="name" placeholder="John Doe" required />
+        </div>
+        <div class="field">
+          <label>Job Title</label>
+          <input type="text" [(ngModel)]="job_title" name="job_title" placeholder="e.g. WI Performance Live Engineer" />
+        </div>
+      }
+      <div class="field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="email" name="email" placeholder="you@company.com" required />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
+      </div>
+
+      @if (error) {
+        <div class="error-msg">
+          <span class="material-icons">error_outline</span> {{ error }}
+        </div>
+      }
+
+      <button type="submit" class="submit-btn" [disabled]="loading">
+        @if (loading) { <span class="material-icons spin">autorenew</span> }
+        {{ mode === 'login' ? 'Sign In' : 'Create Account' }}
+      </button>
+    </form>
+  </div>
+</div>
