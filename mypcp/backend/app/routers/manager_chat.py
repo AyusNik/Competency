@@ -5,6 +5,7 @@ from typing import Dict, List
 from jose import jwt, JWTError
 import os, smtplib, asyncio
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from functools import partial
 
 router = APIRouter(tags=["Manager Chat"])
@@ -28,22 +29,101 @@ def _decode_manager_email(token: str) -> str:
 
 def _send_chat_email(manager_email: str, user_name: str, room_id: str):
     try:
-        body = f"""Hi,
+        html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
 
-{user_name} has initiated a live chat and is waiting to speak with you.
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);padding:32px 40px;text-align:center;">
+              <div style="font-size:28px;margin-bottom:8px;">&#128172;</div>
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">MyPCP</h1>
+              <p style="margin:6px 0 0;color:#93c5fd;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Personal Competency Portal</p>
+            </td>
+          </tr>
 
-Click the link below to join the chat:
-{MANAGER_PORTAL_URL}
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px 28px;">
+              <p style="margin:0 0 6px;font-size:15px;color:#6b7280;">Hello,</p>
+              <h2 style="margin:0 0 20px;font-size:20px;color:#1a1a2e;font-weight:700;">
+                {user_name} wants to chat with you
+              </h2>
 
-Room ID: {room_id}
+              <!-- Alert box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-left:4px solid #2563eb;border-radius:8px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-size:14px;color:#1e40af;line-height:1.6;">
+                      <strong>{user_name}</strong> has initiated a live chat session on the MyPCP platform and is waiting for your response.
+                    </p>
+                  </td>
+                </tr>
+              </table>
 
-Please respond at your earliest convenience.
+              <!-- Details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">User</span><br>
+                    <span style="font-size:14px;color:#1a1a2e;font-weight:600;">{user_name}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Room ID</span><br>
+                    <span style="font-size:13px;color:#374151;font-family:monospace;">{room_id}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;">
+                    <span style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Status</span><br>
+                    <span style="display:inline-block;margin-top:4px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:600;padding:3px 10px;border-radius:12px;">&#9679; Waiting for you</span>
+                  </td>
+                </tr>
+              </table>
 
-— MyPCP System"""
-        msg = MIMEText(body)
-        msg["Subject"] = f"[MyPCP] {user_name} wants to chat with you"
-        msg["From"] = SENDER_EMAIL
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <a href="{MANAGER_PORTAL_URL}" style="display:inline-block;background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:10px;letter-spacing:0.3px;">&#128172; Join the Chat</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;">Please respond at your earliest convenience.</p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">This is an automated notification from <strong style="color:#0f3460;">MyPCP</strong> &mdash; Personal Competency Portal</p>
+              <p style="margin:6px 0 0;font-size:11px;color:#d1d5db;">Please do not reply to this email.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+        msg = MIMEMultipart('alternative')
+        msg["Subject"] = f"[MyPCP] {user_name} is waiting to chat with you"
+        msg["From"] = f"MyPCP Platform <{SENDER_EMAIL}>"
         msg["To"] = manager_email
+        msg.attach(MIMEText(html_body, 'html'))
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
             s.login(EMAIL_USER, EMAIL_PASS)
             s.sendmail(SENDER_EMAIL, manager_email, msg.as_string())
