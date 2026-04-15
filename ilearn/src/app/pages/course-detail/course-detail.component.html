@@ -14,7 +14,14 @@
     <span class="material-icons unavailable-icon">lock</span>
     <h2>Course Not Available</h2>
     <p class="unavailable-title">{{ course.title }}</p>
-    <p class="unavailable-msg">This course is currently unavailable. Please contact your Business Line Manager or reach out via the MyPCP chatbot for assistance.</p>
+    <p class="unavailable-msg" *ngIf="course.competency_element && course.mapped_trainings?.length">
+      No course is mapped under <strong>{{ course.mapped_trainings[0].training_name }}</strong> training
+      for the competency element <strong>{{ course.competency_element }}</strong>
+      under competency unit <strong>{{ course.competency_unit }}</strong>.
+    </p>
+    <p class="unavailable-msg" *ngIf="!course.competency_element || !course.mapped_trainings?.length">
+      This course is currently unavailable. Please contact your Business Line Manager or reach out via the MyPCP chatbot for assistance.
+    </p>
     <a routerLink="/courses" class="btn-back">← Back to Courses</a>
   </div>
 </div>

@@ -6,11 +6,80 @@ from app.agent import get_agent
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
 from datetime import datetime
 
+import json
+
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
 class ChatRequest(BaseModel):
     message: str
+
+
+def _extract_context_sentence(new_messages: list) -> str:
+    """Extract the display_message or build the context sentence from tool results."""
+    # First pass: collect all tool results for context
+    training_name = ""
+    element_name = ""
+    unit_name = ""
+
+    for m in new_messages:
+        if not isinstance(m, ToolMessage):
+            continue
+        try:
+            data = json.loads(m.content)
+        except Exception:
+            continue
+
+        # Odyssey tool
+        if "display_message" in data and "not_configured" in data:
+            if not data.get("all_configured"):
+                return data["display_message"]
+
+        # Assessment access tool — only prepend if actually locked
+        if "date_locked" in data and "unit" in data:
+            if data.get("date_locked"):
+                unit = data.get("unit", "")
+                return f"The assessment for **'{unit}'** is currently locked. To get access or resolve this, please contact your Business Line Manager."
+
+        # Training has no courses
+        if "has_courses" in data and "training_name" in data:
+            if not data.get("has_courses"):
+                training_name = data.get("training_name", "this training")
+
+        # Validate element — capture matched element name
+        if "matched_name" in data and data.get("valid") and "available_elements" not in data:
+            element_name = data.get("matched_name", "")
+
+        # Validate unit — capture matched unit name
+        if "matched_name" in data and data.get("valid") and "available_units" not in data and not element_name:
+            unit_name = data.get("matched_name", "")
+
+    # Build no-courses sentence if training has no courses
+    if training_name:
+        parts = [f"No courses are yet mapped to the training **'{training_name}'**"]
+        if element_name:
+            parts.append(f"for the competency element **'{element_name}'**")
+        parts.append(". To resolve this, please contact your Business Line Manager.")
+        return " ".join(parts)
+
+    return ""
+
+
+def _ensure_context_prefix(ai_reply: str, new_messages: list) -> str:
+    """If the reply starts directly with manager details, prepend the context sentence."""
+    manager_starters = [
+        "**your business line manager",
+        "here are your business line",
+        "**name:**",
+        "- **name:**",
+    ]
+    reply_lower = ai_reply.strip().lower()
+    starts_with_manager = any(reply_lower.startswith(s) for s in manager_starters)
+    if starts_with_manager:
+        context = _extract_context_sentence(new_messages)
+        if context:
+            return context + "\n\n" + ai_reply
+    return ai_reply
 
 
 def _serialize_messages(messages: list) -> list:
@@ -79,6 +148,7 @@ async def chat(req: ChatRequest, user: dict = Depends(decode_token)):
             if isinstance(m, AIMessage) and m.content:
                 ai_reply = m.content
                 break
+        ai_reply = _ensure_context_prefix(ai_reply, new_messages)
         all_messages = history + [m for m in new_messages if m not in history]
         serialized = _serialize_messages(all_messages)
         await db.chat_sessions.update_one(

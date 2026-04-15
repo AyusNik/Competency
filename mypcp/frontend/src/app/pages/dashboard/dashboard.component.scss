@@ -284,10 +284,11 @@
 .unit-category { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 .unit-name { font-size: 14px; font-weight: 500; color: #1a1a2e; }
 
-.ilearn-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ilearn-links { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 
 .chip-row {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 4px; width: 100%;
+  .ilearn-chip { flex: 1; max-width: 100%; }
 }
 
 .check-btn {

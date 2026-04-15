@@ -10,6 +10,27 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 CAT_API = os.getenv("CAT_API_URL", "http://localhost:8001")
 
 
+@router.get("/training/{training_id}")
+async def get_training_detail(training_id: str, user: dict = Depends(decode_token)):
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.get(f"{CAT_API}/trainings/{training_id}")
+        if r.status_code != 200:
+            from fastapi import HTTPException
+            raise HTTPException(404, "Training not found")
+        training = r.json()
+        ilearn_r = await client.get(f"{CAT_API}/ilearn/courses")
+        ilearn_courses_map = {c["cat_course_name"]: c for c in (ilearn_r.json() if ilearn_r.status_code == 200 else []) if c.get("cat_course_name")}
+
+    courses = []
+    for group_key in ["basic_groups", "advanced_groups"]:
+        for group in training.get(group_key, []):
+            for item in group.get("items", []):
+                for cname in item.get("courses", []):
+                    if cname in ilearn_courses_map:
+                        courses.append(ilearn_courses_map[cname])
+    return {"training_id": training_id, "training_name": training["name"], "description": training.get("description", ""), "courses": courses}
+
+
 @router.get("/me")
 async def get_my_dashboard(user: dict = Depends(decode_token)):
     user_id = user["sub"]
@@ -51,17 +72,25 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
             ilearn_courses = []
             ilearn_assessments = []
 
+            trainings_grouped = []  # [{training_name, training_id, courses:[]}]
             if cm:
                 for tid in (cm.get("training_ids") or []):
                     training = all_trainings.get(tid)
                     if not training:
                         continue
+                    t_courses = []
                     for group_key in ["basic_groups", "advanced_groups"]:
                         for group in training.get(group_key, []):
                             for item in group.get("items", []):
                                 for cname in item.get("courses", []):
                                     if cname in ilearn_courses_map:
+                                        t_courses.append(ilearn_courses_map[cname])
                                         ilearn_courses.append(ilearn_courses_map[cname])
+                    trainings_grouped.append({
+                        "training_id": tid,
+                        "training_name": training["name"],
+                        "courses": t_courses,
+                    })
 
                 for aid in (cm.get("assessment_ids") or []):
                     assessment = all_assessments.get(aid)
@@ -97,6 +126,7 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                 "unit_name": unit_name,
                 "competency": unit.get("competency", ""),
                 "plr_table": cm.get("plr_table", "") if cm else "",
+                "trainings_grouped": trainings_grouped,
                 "ilearn_courses": ilearn_courses,
                 "ilearn_assessments": ilearn_assessments,
                 "completed_course_ids": list(completed_ids),

@@ -190,20 +190,25 @@ async def validate_competency_element(user_id: str, competency_unit: str, compet
 
 @mcp.tool
 async def check_assessment_access(user_id: str, competency_unit: str, competency_element: str) -> dict:
-    """Check whether the assessment for a specific competency element has a release_date blocking access.
-    competency_unit = e.g. 'DSA', competency_element = e.g. 'Arrays' (the competency-unit record name)."""
+    """Check whether the assessment for a specific competency element is accessible.
+    Checks both release_date lock AND whether the user has completed all required courses.
+    competency_unit = e.g. 'DSA', competency_element = e.g. 'Arrays'."""
     from datetime import date as _date
     today = _date.today().isoformat()
 
-    all_mappings, all_assessments_list = await _cat_get_many("/content-mappings/", "/assessments/")
+    all_mappings, all_assessments_list, all_trainings_list, ilearn_courses_list = await _cat_get_many(
+        "/content-mappings/", "/assessments/", "/trainings/", "/ilearn/courses"
+    )
     all_assessments = {a["_id"]: a for a in all_assessments_list}
+    all_trainings = {t["_id"]: t for t in all_trainings_list}
+    ilearn_map = {c["cat_course_name"]: c for c in ilearn_courses_list if c.get("cat_course_name")}
 
-    # ce_unit in content-mappings stores the competency-unit name (e.g. "Arrays")
     elem_q = competency_element.strip().lower()
     cm = next((m for m in all_mappings if elem_q in m.get("ce_unit", "").lower()), None)
     if not cm:
-        return {"found": False, "date_locked": False, "release_date": None}
+        return {"found": False, "date_locked": False, "courses_incomplete": False, "release_date": None}
 
+    # Check release_date lock
     locked_dates = [
         cat_a["release_date"]
         for aid in cm.get("assessment_ids", [])
@@ -211,11 +216,35 @@ async def check_assessment_access(user_id: str, competency_unit: str, competency
         and cat_a.get("release_date")
         and cat_a["release_date"] > today
     ]
+    date_locked = len(locked_dates) > 0
+
+    # Check if user completed all courses under this element's trainings
+    progress = await db.user_progress.find_one({"user_id": user_id})
+    completed_ids = set(progress.get("completed_course_ids", []) if progress else [])
+
+    required_course_ids = []
+    for tid in cm.get("training_ids", []):
+        training = all_trainings.get(tid)
+        if not training:
+            continue
+        for gk in ["basic_groups", "advanced_groups"]:
+            for group in training.get(gk, []):
+                for item in group.get("items", []):
+                    for cname in item.get("courses", []):
+                        if cname in ilearn_map:
+                            required_course_ids.append(ilearn_map[cname]["_id"])
+
+    courses_incomplete = len(required_course_ids) > 0 and not all(cid in completed_ids for cid in required_course_ids)
+    completed_count = sum(1 for cid in required_course_ids if cid in completed_ids)
+
     return {
         "found": True,
         "unit": cm.get("ce_unit"),
-        "date_locked": len(locked_dates) > 0,
+        "date_locked": date_locked,
         "release_date": min(locked_dates) if locked_dates else None,
+        "courses_incomplete": courses_incomplete,
+        "completed_courses": completed_count,
+        "total_courses": len(required_course_ids),
     }
 
 
@@ -236,6 +265,170 @@ async def check_odyssey_config(competency_name: str) -> dict:
         "configured": has_from and has_to,
         "promotion_from": comp.get("promotion_from") or "",
         "promotion_to": comp.get("promotion_to") or "",
+    }
+
+
+@mcp.tool
+async def get_trainings_for_element(user_id: str, competency_element: str) -> dict:
+    """Get all training names mapped to a specific competency element (ce_unit) for the user.
+    Returns a list of training names the user can pick from."""
+    all_mappings, all_trainings_list = await _cat_get_many("/content-mappings/", "/trainings/")
+    elem_q = competency_element.strip().lower()
+    cm = next((m for m in all_mappings if elem_q in m.get("ce_unit", "").lower()), None)
+    if not cm:
+        return {"found": False, "trainings": []}
+    all_trainings = {t["_id"]: t["name"] for t in all_trainings_list}
+    training_names = [all_trainings[tid] for tid in cm.get("training_ids", []) if tid in all_trainings]
+    return {"found": True, "competency_element": cm.get("ce_unit"), "trainings": training_names}
+
+
+@mcp.tool
+async def check_training_has_courses(training_name: str) -> dict:
+    """Check if a specific training has any iLearn courses mapped to it.
+    Returns has_courses=True with course names, or has_courses=False if nothing is mapped."""
+    all_trainings_list, ilearn_courses_list = await _cat_get_many("/trainings/", "/ilearn/courses")
+    training_q = training_name.strip().lower()
+    training = next((t for t in all_trainings_list if training_q in t["name"].lower()), None)
+    if not training:
+        return {"found": False, "has_courses": False, "courses": []}
+    ilearn_names = {c["cat_course_name"] for c in ilearn_courses_list if c.get("cat_course_name")}
+    courses = []
+    for group_key in ["basic_groups", "advanced_groups"]:
+        for group in training.get(group_key, []):
+            for item in group.get("items", []):
+                for cname in item.get("courses", []):
+                    if cname in ilearn_names:
+                        courses.append(cname)
+    return {"found": True, "training_name": training["name"], "has_courses": len(courses) > 0, "courses": courses}
+
+
+@mcp.tool
+async def check_my_odyssey_config(user_id: str) -> dict:
+    """Check odyssey (promotion tier) configuration for all competencies assigned to the user.
+    Returns which competencies are configured and which are not."""
+    names = await _get_competency_names(user_id)
+    all_comps = await _cat_get("/competencies/")
+    result = []
+    for name in names:
+        comp = next((c for c in all_comps if c["name"] == name), None)
+        if not comp:
+            result.append({"competency": name, "configured": False, "promotion_from": "", "promotion_to": ""})
+        else:
+            has_from = bool(comp.get("promotion_from"))
+            has_to = bool(comp.get("promotion_to"))
+            result.append({
+                "competency": comp["name"],
+                "configured": has_from and has_to,
+                "promotion_from": comp.get("promotion_from") or "",
+                "promotion_to": comp.get("promotion_to") or "",
+            })
+    not_configured = [r for r in result if not r["configured"]]
+    not_configured_names = [r["competency"] for r in not_configured]
+    # Build the display message so the LLM just shows it as-is
+    if not_configured_names:
+        names_str = ", ".join(f"'{n}'" for n in not_configured_names)
+        display_message = f"Your Odyssey for the competency {names_str} is not configured. To get this set up, please contact your PSD Manager."
+    else:
+        display_message = "Your Odyssey is configured for all your competencies."
+    return {
+        "display_message": display_message,
+        "all_configured": len(not_configured) == 0,
+        "not_configured": not_configured_names,
+        "competencies": result,
+    }
+
+
+@mcp.tool
+async def get_my_trainings(user_id: str) -> dict:
+    """Get all trainings assigned to the user with their mapped courses, grouped by competency element."""
+    names = await _get_competency_names(user_id)
+    all_units, all_mappings, all_trainings_list, ilearn_courses_list = await _cat_get_many(
+        "/competency-units/", "/content-mappings/", "/trainings/", "/ilearn/courses"
+    )
+    units = [u for u in all_units if u.get("competency") in names]
+    all_trainings = {t["_id"]: t for t in all_trainings_list}
+    ilearn_map = {c["cat_course_name"]: c["title"] for c in ilearn_courses_list if c.get("cat_course_name")}
+
+    result = []
+    for unit in units:
+        cm = next((m for m in all_mappings if m.get("ce_unit") == unit["name"]), None)
+        if not cm:
+            continue
+        trainings = []
+        for tid in cm.get("training_ids", []):
+            t = all_trainings.get(tid)
+            if not t:
+                continue
+            courses = [
+                ilearn_map[cname]
+                for gk in ["basic_groups", "advanced_groups"]
+                for g in t.get(gk, [])
+                for item in g.get("items", [])
+                for cname in item.get("courses", [])
+                if cname in ilearn_map
+            ]
+            trainings.append({"training_name": t["name"], "courses": courses, "course_count": len(courses)})
+        result.append({
+            "competency": unit.get("competency"),
+            "competency_element": unit["name"],
+            "trainings": trainings,
+            "training_count": len(trainings),
+        })
+    return {"total_trainings": sum(r["training_count"] for r in result), "elements": result}
+
+
+@mcp.tool
+async def get_element_requirements(user_id: str, competency_element: str) -> dict:
+    """Get all requirements for a specific competency element: PLR level, assessment types, trainings and their courses."""
+    all_units, all_mappings, all_trainings_list, ilearn_courses_list = await _cat_get_many(
+        "/competency-units/", "/content-mappings/", "/trainings/", "/ilearn/courses"
+    )
+    elem_q = competency_element.strip().lower()
+    unit = next((u for u in all_units if elem_q in u["name"].lower()), None)
+    if not unit:
+        return {"found": False, "competency_element": competency_element}
+    cm = next((m for m in all_mappings if m.get("ce_unit") == unit["name"]), None)
+    if not cm:
+        return {"found": True, "competency_element": unit["name"], "plr_level": "", "assessment_types": [], "trainings": []}
+    all_trainings = {t["_id"]: t for t in all_trainings_list}
+    ilearn_map = {c["cat_course_name"]: c["title"] for c in ilearn_courses_list if c.get("cat_course_name")}
+    trainings = []
+    for tid in cm.get("training_ids", []):
+        t = all_trainings.get(tid)
+        if not t:
+            continue
+        courses = [
+            ilearn_map[cname]
+            for gk in ["basic_groups", "advanced_groups"]
+            for g in t.get(gk, [])
+            for item in g.get("items", [])
+            for cname in item.get("courses", [])
+            if cname in ilearn_map
+        ]
+        trainings.append({"training_name": t["name"], "courses": courses})
+    return {
+        "found": True,
+        "competency_element": unit["name"],
+        "competency": unit.get("competency", ""),
+        "plr_level": cm.get("plr_table", ""),
+        "assessment_types": cm.get("assessment_types", []),
+        "trainings": trainings,
+        "total_courses": sum(len(t["courses"]) for t in trainings),
+    }
+
+
+@mcp.tool
+async def get_my_progress_summary(user_id: str) -> dict:
+    """Get a summary of the user's progress: how many courses and assessments completed vs total."""
+    progress = await db.user_progress.find_one({"user_id": user_id})
+    completed_courses = len(progress.get("completed_course_ids", [])) if progress else 0
+    completed_assessments = len(progress.get("completed_assessment_ids", [])) if progress else 0
+    courses_data = await _get_my_courses_data(user_id)
+    total_courses = courses_data["count"]
+    return {
+        "completed_courses": completed_courses,
+        "total_courses": total_courses,
+        "completed_assessments": completed_assessments,
     }
 
 

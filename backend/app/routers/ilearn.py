@@ -49,6 +49,18 @@ async def get_course(id: str):
                             "tab": group_key.replace("_groups", ""),
                         })
     result["mapped_trainings"] = mapped_trainings
+
+    # If course is unavailable, enrich with competency_element and competency_unit
+    if doc.get("available") is False and mapped_trainings:
+        training_ids = [mt["training_id"] for mt in mapped_trainings]
+        cm = await cat_db.content_mappings.find_one({"training_ids": {"$in": training_ids}})
+        if cm:
+            ce_unit_name = cm.get("ce_unit", "")  # e.g. "Arrays"
+            result["competency_element"] = ce_unit_name
+            # Look up the competency (unit) name from competency_units collection
+            cu = await cat_db.competency_units.find_one({"name": ce_unit_name})
+            result["competency_unit"] = cu.get("competency", "") if cu else ""
+
     return result
 
 

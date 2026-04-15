@@ -11,6 +11,10 @@ export class DashboardService {
     return this.http.get<any>(`${API}/dashboard/me`);
   }
 
+  getTrainingDetail(trainingId: string) {
+    return this.http.get<any>(`${API}/dashboard/training/${trainingId}`);
+  }
+
   toggleCourseComplete(courseId: string) {
     return this.http.post<any>(`${API}/progress/course/${courseId}/complete`, {});
   }

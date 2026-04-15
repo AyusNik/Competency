@@ -1,0 +1,76 @@
+  <div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span class="material-icons">hub</span></div>
+    <button class="nav-btn" (click)="goBack()" title="Back to Dashboard">
+      <span class="material-icons">arrow_back</span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="brand-tag">MyPCP</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Training Detail</span>
+      </div>
+    </header>
+
+    <div class="content">
+      @if (loading) {
+        <div class="loading"><span class="material-icons spin">autorenew</span> Loading...</div>
+      } @else if (error) {
+        <div class="error-state">{{ error }}</div>
+      } @else {
+        <button class="back-link" (click)="goBack()">
+          <span class="material-icons">arrow_back</span> Back to Dashboard
+        </button>
+
+        <div class="training-hero">
+          <span class="material-icons hero-icon">menu_book</span>
+          <div>
+            <h1 class="training-title">{{ training.training_name }}</h1>
+            <p class="training-desc">{{ training.description }}</p>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="material-icons">play_circle</span>
+          Courses under this Training
+          <span class="count-badge">{{ training.courses.length }}</span>
+        </div>
+
+        @if (training.courses.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons">info_outline</span>
+            <p>No courses are mapped under this training.</p>
+          </div>
+        } @else {
+          <div class="courses-grid">
+            @for (c of training.courses; track c._id) {
+              <div class="course-card" (click)="openCourse(c)">
+                <div class="course-thumb">
+                  @if (c.thumbnail) {
+                    <img [src]="c.thumbnail" [alt]="c.title" />
+                  } @else {
+                    <span class="material-icons thumb-icon">play_circle</span>
+                  }
+                  <span class="course-type-badge">{{ c.type }}</span>
+                </div>
+                <div class="course-body">
+                  <div class="course-category">{{ c.category }}</div>
+                  <div class="course-title">{{ c.title }}</div>
+                  <div class="course-meta">
+                    <span><span class="material-icons">person</span>{{ c.instructor }}</span>
+                    <span><span class="material-icons">schedule</span>{{ c.duration }}</span>
+                  </div>
+                  <span class="level-chip level-{{ c.level?.toLowerCase() }}">{{ c.level }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </main>
+</div>

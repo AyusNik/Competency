@@ -157,6 +157,37 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (lastComplete?.promotion_to) this.data.current_position = lastComplete.promotion_to;
   }
 
+  private expandedTrainings = new Set<string>();
+
+  toggleTraining(key: string) {
+    this.expandedTrainings.has(key) ? this.expandedTrainings.delete(key) : this.expandedTrainings.add(key);
+  }
+
+  isTrainingExpanded(key: string): boolean {
+    return this.expandedTrainings.has(key);
+  }
+
+  openTraining(trainingId: string) {
+    this.router.navigate(['/training', trainingId]);
+  }
+
+  get hasOdysseyTiers(): boolean {
+    return (this.data?.odyssey || []).some((o: any) => o.promotion_from && o.promotion_to);
+  }
+
+  isTrainingComplete(training: any, unit: any): boolean {
+    return training.courses.length > 0 && training.courses.every((c: any) => this.isCompleted(c._id, unit));
+  }
+
+  toggleTrainingComplete(training: any, unit: any) {
+    const allDone = this.isTrainingComplete(training, unit);
+    training.courses.forEach((c: any) => {
+      const done = this.isCompleted(c._id, unit);
+      if (!allDone && !done) this.toggleComplete(c._id, unit);
+      else if (allDone && done) this.toggleComplete(c._id, unit);
+    });
+  }
+
   isCompleted(courseId: string, unit: any): boolean {
     return (unit.completed_course_ids || []).includes(courseId);
   }

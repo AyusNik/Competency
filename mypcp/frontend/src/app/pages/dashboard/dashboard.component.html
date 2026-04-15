@@ -63,7 +63,7 @@
                 <div class="profile-name">{{ data.user.name }}</div>
                 <div class="profile-title">{{ data.user.job_title || 'Employee' }}</div>
               </div>
-              @if (data.current_position) {
+              @if (data.current_position && hasOdysseyTiers) {
                 <div class="current-position-row">
                   <span class="material-icons cp-icon">workspace_premium</span>
                   <span class="cp-label">Current Position</span>
@@ -104,7 +104,8 @@
               </div>
             </div>
 
-            <!-- My Odyssey -->
+            <!-- My Odyssey — only show if at least one competency has promotion tiers configured -->
+            @if (hasOdysseyTiers) {
             <div class="odyssey-card">
               <div class="odyssey-header">
                 <span class="material-icons odyssey-icon">explore</span>
@@ -142,6 +143,7 @@
                 <div class="odyssey-empty">No competencies assigned</div>
               }
             </div>
+            } <!-- end odyssey @if -->
 
             <!-- Competency Groups -->
             @for (comp of data.competencies; track comp._id) {
@@ -186,18 +188,20 @@
                   <div class="unit-left">
                     <div class="unit-category">{{ unit.plr_table || 'COMPETENCY' }}</div>
                     <div class="unit-name">{{ unit.unit_name }}</div>
-                    <!-- iLearn links -->
-                    @if (unit.ilearn_courses?.length || unit.ilearn_assessments?.length) {
+                    <!-- Trainings grouped -->
+                    @if (unit.trainings_grouped?.length || unit.ilearn_assessments?.length) {
                       <div class="ilearn-links">
-                        @for (c of unit.ilearn_courses; track c._id) {
+                        @for (t of unit.trainings_grouped; track t.training_id) {
                           <div class="chip-row">
-                            <button class="ilearn-chip training" (click)="openILearn(c, 'course')" [title]="c.title">
-                              <span class="material-icons">play_circle</span>
-                              <span class="chip-label">{{ c.title }}</span>
-                              <span class="chip-type">Training</span>
+                            <button class="ilearn-chip training" (click)="openTraining(t.training_id)" [title]="t.training_name">
+                              <span class="material-icons">menu_book</span>
+                              <span class="chip-label">{{ t.training_name }}</span>
+                              <span class="chip-type">{{ t.courses.length }} course{{ t.courses.length !== 1 ? 's' : '' }}</span>
                             </button>
-                            <button class="check-btn" (click)="toggleComplete(c._id, unit); $event.stopPropagation()" [class.checked]="isCompleted(c._id, unit)" [class.done]="isCompleted(c._id, unit)" title="{{ isCompleted(c._id, unit) ? 'Completed' : 'Mark complete' }}">
-                              <span class="material-icons">{{ isCompleted(c._id, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                            <button class="check-btn" (click)="toggleTrainingComplete(t, unit); $event.stopPropagation()"
+                              [class.checked]="isTrainingComplete(t, unit)"
+                              [title]="isTrainingComplete(t, unit) ? 'Mark incomplete' : 'Mark all courses complete'">
+                              <span class="material-icons">{{ isTrainingComplete(t, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
                             </button>
                           </div>
                         }
