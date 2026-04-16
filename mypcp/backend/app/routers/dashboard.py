@@ -119,7 +119,8 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                         release_info.append({"assessment_id": aid, "release_date": rd})
 
             date_locked = len(release_info) > 0
-            assessments_unlocked = courses_done and not date_locked
+            assessments_unlocked = not date_locked
+            cpa_unlocked = courses_done and not date_locked
 
             enriched_units.append({
                 "unit_id": unit["_id"],
@@ -132,6 +133,7 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                 "completed_course_ids": list(completed_ids),
                 "completed_assessment_ids": list(completed_assessment_ids),
                 "assessments_unlocked": assessments_unlocked,
+                "cpa_unlocked": cpa_unlocked,
                 "release_info": release_info,
                 "element_complete": courses_done and assessments_done,
             })

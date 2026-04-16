@@ -172,6 +172,16 @@ async def validate_competency_unit(user_id: str, competency_unit: str) -> dict:
 
 
 @mcp.tool
+async def get_my_competency_elements(user_id: str) -> dict:
+    """Get all competency elements assigned to the user across all their competencies.
+    Returns a flat numbered list of element names for the user to pick from."""
+    names = await _get_competency_names(user_id)
+    all_units = await _cat_get("/competency-units/")
+    elements = [u["name"] for u in all_units if u.get("competency") in names]
+    return {"elements": elements, "count": len(elements)}
+
+
+@mcp.tool
 async def validate_competency_element(user_id: str, competency_unit: str, competency_element: str) -> dict:
     """Validate that a competency element exists under the given competency unit.
     Returns valid=True with the exact matched name, or valid=False with available element names."""
@@ -189,10 +199,10 @@ async def validate_competency_element(user_id: str, competency_unit: str, compet
 
 
 @mcp.tool
-async def check_assessment_access(user_id: str, competency_unit: str, competency_element: str) -> dict:
+async def check_assessment_access(user_id: str, competency_element: str, assessment_type: str) -> dict:
     """Check whether the assessment for a specific competency element is accessible.
-    Checks both release_date lock AND whether the user has completed all required courses.
-    competency_unit = e.g. 'DSA', competency_element = e.g. 'Arrays'."""
+    Checks release_date lock for all types. Checks training completion only for CPA.
+    competency_element = e.g. 'Arrays', assessment_type = e.g. 'CPA', 'PLE', 'CTI'."""
     from datetime import date as _date
     today = _date.today().isoformat()
 
@@ -218,28 +228,30 @@ async def check_assessment_access(user_id: str, competency_unit: str, competency
     ]
     date_locked = len(locked_dates) > 0
 
-    # Check if user completed all courses under this element's trainings
-    progress = await db.user_progress.find_one({"user_id": user_id})
-    completed_ids = set(progress.get("completed_course_ids", []) if progress else [])
-
+    # Training completion check — only applies to CPA
+    courses_incomplete = False
+    completed_count = 0
     required_course_ids = []
-    for tid in cm.get("training_ids", []):
-        training = all_trainings.get(tid)
-        if not training:
-            continue
-        for gk in ["basic_groups", "advanced_groups"]:
-            for group in training.get(gk, []):
-                for item in group.get("items", []):
-                    for cname in item.get("courses", []):
-                        if cname in ilearn_map:
-                            required_course_ids.append(ilearn_map[cname]["_id"])
-
-    courses_incomplete = len(required_course_ids) > 0 and not all(cid in completed_ids for cid in required_course_ids)
-    completed_count = sum(1 for cid in required_course_ids if cid in completed_ids)
+    if assessment_type.upper() == "CPA":
+        progress = await db.user_progress.find_one({"user_id": user_id})
+        completed_ids = set(progress.get("completed_course_ids", []) if progress else [])
+        for tid in cm.get("training_ids", []):
+            training = all_trainings.get(tid)
+            if not training:
+                continue
+            for gk in ["basic_groups", "advanced_groups"]:
+                for group in training.get(gk, []):
+                    for item in group.get("items", []):
+                        for cname in item.get("courses", []):
+                            if cname in ilearn_map:
+                                required_course_ids.append(ilearn_map[cname]["_id"])
+        courses_incomplete = len(required_course_ids) > 0 and not all(cid in completed_ids for cid in required_course_ids)
+        completed_count = sum(1 for cid in required_course_ids if cid in completed_ids)
 
     return {
         "found": True,
         "unit": cm.get("ce_unit"),
+        "assessment_type": assessment_type.upper(),
         "date_locked": date_locked,
         "release_date": min(locked_dates) if locked_dates else None,
         "courses_incomplete": courses_incomplete,

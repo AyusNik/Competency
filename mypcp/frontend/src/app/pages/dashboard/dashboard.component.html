@@ -207,12 +207,12 @@
                         }
                         @for (a of unit.ilearn_assessments; track a._id) {
                           <div class="chip-row">
-                            <button class="ilearn-chip assess" (click)="openILearn(a, 'assessment')" [title]="a.title" [disabled]="!unit.assessments_unlocked" [class.locked]="!unit.assessments_unlocked">
-                              <span class="material-icons">{{ unit.assessments_unlocked ? 'assignment' : 'lock' }}</span>
+                            <button class="ilearn-chip assess" (click)="openILearn(a, 'assessment')" [title]="a.title" [disabled]="!isAssessmentUnlocked(a, unit)" [class.locked]="!isAssessmentUnlocked(a, unit)">
+                              <span class="material-icons">{{ isAssessmentUnlocked(a, unit) ? 'assignment' : 'lock' }}</span>
                               <span class="chip-label">{{ a.title }}</span>
                               <span class="chip-type">{{ a.type }}</span>
                             </button>
-                            @if (unit.assessments_unlocked) {
+                            @if (isAssessmentUnlocked(a, unit)) {
                               <button class="check-btn" (click)="toggleAssessmentComplete(a._id, unit); $event.stopPropagation()" [class.checked]="isAssessmentCompleted(a._id, unit)" [class.done]="isAssessmentCompleted(a._id, unit)" title="{{ isAssessmentCompleted(a._id, unit) ? 'Completed' : 'Mark complete' }}">
                                 <span class="material-icons">{{ isAssessmentCompleted(a._id, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
                               </button>

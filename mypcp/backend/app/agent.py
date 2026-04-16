@@ -43,8 +43,8 @@ class RaiseTicketArgs(BaseModel):
 
 class CheckAssessmentArgs(BaseModel):
     user_id: str = Field(description="The user's MongoDB ObjectId string")
-    competency_unit: str = Field(description="The competency unit name provided by the user")
     competency_element: str = Field(description="The competency element name provided by the user")
+    assessment_type: str = Field(description="The assessment type: CPA, PLE, or CTI")
 
 
 class ValidateUnitArgs(BaseModel):
@@ -109,11 +109,16 @@ async def validate_competency_element(user_id: str, competency_unit: str, compet
     """Validate that a competency element exists under the given unit. Returns valid=True with matched name, or valid=False with available element names."""
     return await call_mcp("validate_competency_element", {"user_id": user_id, "competency_unit": competency_unit, "competency_element": competency_element})
 
+@tool("get_my_competency_elements", args_schema=UserIdArgs)
+async def get_my_competency_elements(user_id: str) -> str:
+    """Get all competency elements assigned to the user across all their competencies. Returns a flat list for the user to pick from."""
+    return await call_mcp("get_my_competency_elements", {"user_id": user_id})
+
 
 @tool("check_assessment_access", args_schema=CheckAssessmentArgs)
-async def check_assessment_access(user_id: str, competency_unit: str, competency_element: str) -> str:
-    """Check whether the assessment for a specific competency unit/element has a release date blocking access. Returns date_locked and release_date."""
-    return await call_mcp("check_assessment_access", {"user_id": user_id, "competency_unit": competency_unit, "competency_element": competency_element})
+async def check_assessment_access(user_id: str, competency_element: str, assessment_type: str) -> str:
+    """Check whether the assessment for a specific competency element is accessible. Training completion is only checked for CPA."""
+    return await call_mcp("check_assessment_access", {"user_id": user_id, "competency_element": competency_element, "assessment_type": assessment_type})
 
 
 @tool("check_odyssey_config", args_schema=CheckOdysseyArgs)
@@ -171,7 +176,7 @@ AGENT_TOOLS = [
     get_manager_details, raise_ticket, check_odyssey_config,
     get_trainings_for_element, check_training_has_courses,
     get_my_trainings_summary, get_element_requirements, get_my_progress_summary,
-    check_my_odyssey_config,
+    check_my_odyssey_config, get_my_competency_elements,
 ]
 TOOLS_BY_NAME = {t.name: t for t in AGENT_TOOLS}
 
@@ -203,42 +208,30 @@ For course CONTENT issues:
 5. If no: acknowledge and offer other help.
 
 For NO COURSES AVAILABLE issues (user says "no courses available", "no course mapped", "cannot access", "not able to access", "can't open", "access denied", "course not available"):
-1. Ask: "Which Competency Unit are you referring to? Can you tell me the name?\n> 💡 *Not sure? You can find your Competency Units listed on your MyPCP Dashboard, just below the My Odyssey section on the left panel or directly in the left bottom corner. *"
-2. Wait for Competency Unit name. Do NOT call any tool yet.
-3. Call validate_competency_unit with the user's answer.
-   - If valid=False: reply "I couldn't find a Competency Unit matching **'{input}'** in your profile. Here are your available units: {available_units}. Could you please pick one from the list?". Wait for a new answer and re-validate. Do NOT proceed until valid=True.
-   - If valid=True: note the matched_name as the confirmed competency unit.
-4. Ask: "Which Competency Element under **'{confirmed unit}'** are you referring to?"
-5. Wait for Competency Element name. Do NOT call any tool yet.
-6. Call validate_competency_element with the confirmed unit and the user's answer.
-   - If valid=False: reply "I couldn't find a Competency Element matching **'{input}'** under **'{confirmed unit}'**. Available elements are: {available_elements}. Could you please pick one?". Wait for a new answer and re-validate. Do NOT proceed until valid=True.
-   - If valid=True: note the matched_name as the confirmed competency element.
-7. Call get_trainings_for_element with user_id and the confirmed competency element.
-   - If found=False or trainings list is empty: reply "I couldn't find any trainings mapped to **'{confirmed element}'**. Please contact your Business Line Manager." Then call get_manager_details and show full contact. Then add: "Would you like to talk to your manager directly right now? Just say **'talk to manager'**!"
-   - If trainings list has items: reply "Here are the trainings available under **'{confirmed element}'**:\n{numbered list of training names}\nWhich training are you having trouble with? Please pick one from the list above."
-8. Wait for the user to pick a training. IMPORTANT: The user MUST pick from the list you showed. If the user types a training name that is NOT in the list you showed, reply: "That training is not listed under **'{confirmed element}'**. Please pick one from the list I provided above." Show the list again and wait. Do NOT call any tool with an unrecognised training name.
-9. Once the user picks a valid training from the list, call check_training_has_courses with that exact training name from the list.
+1. Immediately call get_my_competency_elements with user_id. Do NOT ask the user anything yet.
+2. Reply: "Which Competency Element are you referring to? Here are your available elements:\n{numbered list of elements}\nPlease pick one from the list above."
+3. Wait for the user's answer. If the user picks a name NOT in the list, reply: "That element is not in your profile. Please pick one from the list above." Show the list again and wait. Do NOT proceed until a valid element is chosen.
+4. Note the matched element name as confirmed_element.
+5. Call get_trainings_for_element with user_id and confirmed_element.
+   - If found=False or trainings list is empty: reply "I couldn't find any trainings mapped to **'{confirmed_element}'**. Please contact your Business Line Manager." Then call get_manager_details and show full contact. Then add: "Would you like to talk to your manager directly right now? Just say **'talk to manager'**!"
+   - If trainings list has items: reply "Here are the trainings available under **'{confirmed_element}'**:\n{numbered list of training names}\nWhich training are you having trouble with? Please pick one from the list above."
+6. Wait for the user to pick a training. If the user picks a name NOT in the list, show the list again and wait. Do NOT call any tool with an unrecognised training name.
+7. Once the user picks a valid training, call check_training_has_courses with that exact training name.
    - If has_courses=True: reply "The training **'{training name}'** does have courses mapped to it. Please try accessing them again on the iLearn portal. If you still face issues, it may be a browser or device problem — try clearing your cache or using a different browser."
-   - If has_courses=False: reply "No courses are mapped under the **'{training name}'** training for the competency element **'{confirmed element}'** under competency unit **'{confirmed unit}'**." Then call get_manager_details and show full manager contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
+   - If has_courses=False: reply "No courses are mapped under the **'{training name}'** training for the competency element **'{confirmed_element}'**." Then call get_manager_details and show full manager contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
 
 For ASSESSMENT ACCESS issues (user cannot start/create/submit a CPA/PLE/CPI assessment):
 1. Check if the user already mentioned the assessment type (CPA, PLE, or CTI) in their message. If yes, note it as confirmed_type. If not, ask: "Which type of assessment are you having trouble with? Please specify: **CPA**, **PLE**, or **CTI**."
 2. Wait for assessment type if not already known.
-3. Ask: "Which Competency Unit is this assessment for?\n> 💡 *Not sure? You can find your Competency Units listed on your MyPCP Dashboard, just below the My Odyssey section on the left panel or directly in the left bottom corner. *"
-4. Wait for the answer. Do NOT call any tool yet.
-5. Call validate_competency_unit with the user's answer.
-   - If valid=False: reply "I couldn't find a Competency Unit matching **'{input}'** in your profile. Here are your available units: {available_units}. Could you please pick one from the list?". Wait for a new answer and re-validate. Do NOT proceed until valid=True.
-   - If valid=True: note the matched_name as the confirmed competency unit.
-6. Ask: "Which Competency Element under **'{confirmed unit}'** is this assessment for?"
-7. Wait for the answer. Do NOT call any tool yet.
-8. Call validate_competency_element with the confirmed unit and the user's answer.
-   - If valid=False: reply "I couldn't find a Competency Element matching **'{input}'** under **'{confirmed unit}'**. Available elements are: {available_elements}. Could you please pick one?". Wait for a new answer and re-validate. Do NOT proceed until valid=True.
-   - If valid=True: note the matched_name as the confirmed competency element.
-9. Call check_assessment_access with user_id, confirmed competency_unit, confirmed competency_element.
-10. Based on the result:
-    - If date_locked=True: reply "The **{confirmed_type}** assessment for **'{confirmed element}'** under **'{confirmed unit}'** is currently locked. To get access or resolve this, please contact your Business Line Manager." Then call get_manager_details and display the full contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
-    - If courses_incomplete=True: reply "The **{confirmed_type}** assessment for **'{confirmed element}'** under **'{confirmed unit}'** is not yet accessible because your training is not complete. You have completed {completed_courses} out of {total_courses} required courses. Please complete all training courses first to unlock the assessment."
-    - If date_locked=False and courses_incomplete=False: reply "The **{confirmed_type}** assessment for **'{confirmed element}'** under **'{confirmed unit}'** is accessible. Please try opening it again on the iLearn portal. If you still face issues, it may be a browser or device problem — try clearing your cache or using a different browser." Do NOT show manager details in this case.
+3. Immediately call get_my_competency_elements with user_id. Do NOT ask the user anything yet.
+4. Reply: "Which Competency Element is this assessment for? Here are your available elements:\n{numbered list of elements}\nPlease pick one from the list above."
+5. Wait for the user's answer. If the user picks a name NOT in the list, reply: "That element is not in your profile. Please pick one from the list above." Show the list again and wait. Do NOT proceed until a valid element is chosen.
+6. Note the matched element name as confirmed_element.
+7. Call check_assessment_access with user_id, competency_element=confirmed_element, assessment_type=confirmed_type.
+8. Based on the result:
+    - If date_locked=True: reply "The **{confirmed_type}** assessment for **'{confirmed_element}'** is currently locked. To get access or resolve this, please contact your Business Line Manager." Then call get_manager_details and display the full contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
+    - If courses_incomplete=True: reply "The **{confirmed_type}** assessment for **'{confirmed_element}'** is not yet accessible because your training is not complete. You have completed {completed_courses} out of {total_courses} required courses. Please complete all training courses first to unlock the assessment."
+    - If date_locked=False and courses_incomplete=False: reply "The **{confirmed_type}** assessment for **'{confirmed_element}'** is accessible. Please try opening it again on the iLearn portal. If you still face issues, it may be a browser or device problem — try clearing your cache or using a different browser." Do NOT show manager details in this case.
 
 For ODYSSEY / PROMOTION issues (user says odyssey not visible, promotion not showing, career path blank, etc.):
 1. Immediately call check_my_odyssey_config with user_id. Do NOT ask the user for any competency name first.

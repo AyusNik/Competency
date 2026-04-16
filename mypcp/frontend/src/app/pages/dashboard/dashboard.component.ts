@@ -136,7 +136,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const coursesDone = allCourseIds.length > 0 && allCourseIds.every((id: string) => unit.completed_course_ids.includes(id));
     const assessmentsDone = allAssessmentIds.length > 0 && allAssessmentIds.every((id: string) => unit.completed_assessment_ids.includes(id));
     const dateLocked = unit.release_info?.length > 0;
-    unit.assessments_unlocked = coursesDone && !dateLocked;
+    unit.assessments_unlocked = !dateLocked;
+    unit.cpa_unlocked = coursesDone && !dateLocked;
     unit.element_complete = coursesDone && assessmentsDone;
   }
 
@@ -186,6 +187,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       if (!allDone && !done) this.toggleComplete(c._id, unit);
       else if (allDone && done) this.toggleComplete(c._id, unit);
     });
+  }
+
+  isAssessmentUnlocked(assessment: any, unit: any): boolean {
+    const isCPA = (assessment.type || '').toUpperCase() === 'CPA';
+    return isCPA ? unit.cpa_unlocked : unit.assessments_unlocked;
   }
 
   isCompleted(courseId: string, unit: any): boolean {
