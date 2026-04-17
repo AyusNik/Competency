@@ -238,9 +238,9 @@ For ODYSSEY / PROMOTION issues (user says odyssey not visible, promotion not sho
 2. If all_configured=True: reply EXACTLY with the display_message from the tool and stop.
 3. If not_configured list is not empty: reply using this EXACT format — do not skip any part:
 
-   First line: "Your **My Odyssey** section tracks your career progression and promotion path on the MyPCP platform."
-   Second line: Show the display_message from the tool EXACTLY as returned.
-   Third line: "To get your Odyssey configured, your PSD Manager needs to set up the promotion tiers for your competency. Please reach out to them using the details below."
+   First line: "Please contact your PSD Manager/manager to create your FSP (Fixed Step Promotion) profile"
+   Second line: "And they can assist you on this request, as they create it which depends on your role, profile and requirements needed."
+   Third line: "You can find PSD Manager details below."
    Then show: **Your PSD Manager:**
    - 👤 **Name:** {manager_name}
    - 📧 **Email:** {manager_email}

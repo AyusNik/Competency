@@ -339,7 +339,7 @@ async def check_my_odyssey_config(user_id: str) -> dict:
     # Build the display message so the LLM just shows it as-is
     if not_configured_names:
         names_str = ", ".join(f"'{n}'" for n in not_configured_names)
-        display_message = f"Your Odyssey for the competency {names_str} is not configured. To get this set up, please contact your PSD Manager."
+        display_message = f"Your Odyssey for the competency {names_str} is not configured. Please contact your PSD Manager/manager to create your FSP (Fixed Step Promotion) profile. They can assist you on this request, as they create it which depends on your role, profile and requirements needed."
     else:
         display_message = "Your Odyssey is configured for all your competencies."
     return {
