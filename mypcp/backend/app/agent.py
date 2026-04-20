@@ -67,6 +67,10 @@ class GetTrainingsArgs(BaseModel):
 class CheckTrainingArgs(BaseModel):
     training_name: str = Field(description="The training name to check for mapped courses")
 
+class CheckPleMappedArgs(BaseModel):
+    user_id: str = Field(description="The user's MongoDB ObjectId string")
+    competency_element: str = Field(description="The competency element name to check PLE mapping for")
+
 class GetElementReqArgs(BaseModel):
     user_id: str = Field(description="The user's MongoDB ObjectId string")
     competency_element: str = Field(description="The competency element name to get requirements for")
@@ -137,6 +141,11 @@ async def check_training_has_courses(training_name: str) -> str:
     """Check if a training has any iLearn courses mapped to it. Returns has_courses=True/False."""
     return await call_mcp("check_training_has_courses", {"training_name": training_name})
 
+@tool("check_ple_mapped", args_schema=CheckPleMappedArgs)
+async def check_ple_mapped(user_id: str, competency_element: str) -> str:
+    """Check if a PLE assessment is mapped in iLearn for a specific competency element. Returns is_mapped=True/False."""
+    return await call_mcp("check_ple_mapped", {"user_id": user_id, "competency_element": competency_element})
+
 @tool("check_my_odyssey_config", args_schema=UserIdArgs)
 async def check_my_odyssey_config(user_id: str) -> str:
     """Check odyssey promotion tier configuration for ALL competencies assigned to the user at once."""
@@ -174,7 +183,7 @@ AGENT_TOOLS = [
     get_my_assessments, check_course_assigned, validate_competency_unit,
     validate_competency_element, check_assessment_access,
     get_manager_details, raise_ticket, check_odyssey_config,
-    get_trainings_for_element, check_training_has_courses,
+    get_trainings_for_element, check_training_has_courses, check_ple_mapped,
     get_my_trainings_summary, get_element_requirements, get_my_progress_summary,
     check_my_odyssey_config, get_my_competency_elements,
 ]
@@ -197,6 +206,7 @@ Be concise. Never add examples, hints, or extra explanation when asking a questi
 DETECTING ISSUE TYPE:
 - If the user says "cannot see content", "content not visible", "video not loading", "content not showing", "not able to see the content" → this is a CONTENT issue.
 - If the user says "cannot access", "not able to access", "can't open", "access denied", "no courses available", "no course mapped", "course not available", "no course found", "courses not found", "no courses found" → this is a NO COURSES AVAILABLE issue.
+- If the user says "PLE not mapped", "PLE assignment not mapped", "PLE is not mapped", "my PLE is not mapped", "PLE not available", "PLE not showing", "PLE not visible", "PLE assignment not visible", "my PLE is not visible", "cannot see PLE", "PLE is not visible" → this is a PLE NOT MAPPED issue.
 - If the user message matches the pattern: 'no courses available for training "{training}" under competency element "{element}" in competency unit "{unit}"' → this is a PRE-FILLED NO COURSES issue where all context is already known. Go directly to step 9 of the NO COURSES AVAILABLE flow using the extracted training, element and unit values.
 - If the user says "completed all courses", "finished training", "done with courses" AND mentions they still cannot access an assessment → this is an ASSESSMENT ACCESS issue.
 - If the user message contains any of: "cannot start", "can't start", "unable to start", "cannot create", "can't create", "cannot submit", "can't submit", "unable to submit" AND contains any of: "CPA", "PLE", "CTI", "assessment" → this is an ASSESSMENT ACCESS issue.
@@ -221,6 +231,20 @@ For NO COURSES AVAILABLE issues (user says "no courses available", "no course ma
 6. Once the user picks a valid training, call check_training_has_courses with that exact training name.
    - If has_courses=True: reply "The training **'{training name}'** does have courses mapped to it. Please try accessing them again on the iLearn portal. If you still face issues, it may be a browser or device problem — try clearing your cache or using a different browser."
    - If has_courses=False: reply "No courses are mapped under the **'{training name}'** training for the competency element **'{confirmed_element}'**." Then call get_manager_details and show full manager contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
+
+For PLE NOT MAPPED issues (user says "PLE not mapped", "PLE assignment not mapped", "my PLE is not mapped", etc.):
+1. Ask: "Which Competency Element is the PLE for? Please tell me the name."
+2. Wait for the user's answer. Do NOT call any tool yet.
+3. Call get_my_competency_elements to get the full list, then check if the user's answer matches any element (case-insensitive, partial match allowed).
+   - If match found: note it as confirmed_element and proceed.
+   - If no match: reply "I couldn't find a Competency Element matching **'{input}'** in your profile. Here are your available elements:\n{numbered list}\nCould you please pick one from the list?" Wait for a new answer and re-validate. Do NOT proceed until valid.
+4. Call check_ple_mapped with user_id and confirmed_element.
+   - If found=False or ple_exams is empty: reply "No PLE assignments are configured under **'{confirmed_element}'**. Please contact your Business Line Manager." Then call get_manager_details and show full contact. Then add: "Would you like to talk to your manager directly right now? Just say **'talk to manager'**!"
+   - If ple_exams has items: reply "Here are the PLE assignments under **'{confirmed_element}'**:\n{numbered list of exam_name values}\nWhich PLE assignment is not mapped? Please pick one from the list above."
+5. Wait for the user to pick a PLE name. If the user picks a name NOT in the list, show the list again and wait.
+6. Once the user picks a valid PLE from the list, check its accessible value from the tool result:
+   - If accessible=True: reply "The PLE **'{exam_name}'** is accessible on iLearn. Please try accessing it again on the portal. If you still face issues, try clearing your cache or using a different browser."
+   - If accessible=False: reply "The PLE **'{exam_name}'** under **'{confirmed_element}'** is not accessible in iLearn." Then call get_manager_details and show full manager contact (name, title, email, phone). Then add: "Would you like to talk to your manager directly right now in this chat? Just say **'talk to manager'** and I'll connect you instantly!"
 
 For ASSESSMENT ACCESS issues (user cannot start/create/submit a CPA/PLE/CPI assessment):
 1. Check if the user already mentioned the assessment type (CPA, PLE, or CTI) in their message. If yes, note it as confirmed_type. If not, ask: "Which type of assessment are you having trouble with? Please specify: **CPA**, **PLE**, or **CTI**."

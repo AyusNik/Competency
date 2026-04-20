@@ -274,9 +274,14 @@
       </div>
       <div class="ple-modal-body">
         <div class="ple-status">PENDING</div>
-        <div class="ple-name">{{ plePopup.assessment.title }}</div>
-        <div class="ple-id">{{ plePopup.assessment._id }}</div>
-        @if (plePopup.assessment.ilearn_url || true) {
+        @if (plePopup.assessment.unmapped) {
+          <div class="ple-name">{{ plePopup.assessment.title }}</div>
+          <a class="ple-link" (click)="openUnmappedPleILearn()" href="javascript:void(0)">
+            Open in iLearn
+          </a>
+        } @else if (plePopup.assessment.cat_exam_name !== 'DSA-ARRAYS-EXPERT PROFICIENCY-PLE') {
+          <div class="ple-name">{{ plePopup.assessment.title }}</div>
+          <div class="ple-id">{{ plePopup.assessment._id }}</div>
           <a class="ple-link" (click)="openPleILearn()" href="javascript:void(0)">
             Open in iLearn
           </a>

@@ -217,6 +217,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.closePlePopup();
   }
 
+  openUnmappedPleILearn() {
+    if (!this.plePopup) return;
+    const examName = this.plePopup.assessment.cat_exam_name || this.plePopup.assessment.title;
+    this.closePlePopup();
+    this.router.navigate(['/ple-detail'], { queryParams: { exam: examName } });
+  }
+
   isPle(assessment: any): boolean {
     return (assessment.type || '').toUpperCase() === 'PLE';
   }

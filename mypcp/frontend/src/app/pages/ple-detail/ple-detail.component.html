@@ -1,0 +1,42 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span class="material-icons">hub</span></div>
+    <button class="nav-btn" (click)="goBack()" title="Back to Dashboard">
+      <span class="material-icons">arrow_back</span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="brand-tag">MyPCP</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Training Detail</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <button class="back-link" (click)="goBack()">
+        <span class="material-icons">arrow_back</span> Back to Dashboard
+      </button>
+
+      <div class="training-hero">
+        <span class="material-icons hero-icon">menu_book</span>
+        <div>
+          <h1 class="training-title">{{ examName }}</h1>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="material-icons">assignment</span>
+        PLE under this Training
+        <span class="count-badge">0</span>
+      </div>
+
+      <div class="empty-state">
+        <span class="material-icons">info_outline</span>
+        <p>No PLE are mapped under this training.</p>
+      </div>
+    </div>
+  </main>
+</div>

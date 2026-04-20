@@ -315,6 +315,47 @@ async def check_training_has_courses(training_name: str) -> dict:
 
 
 @mcp.tool
+async def check_ple_mapped(user_id: str, competency_element: str) -> dict:
+    """Check if a PLE assessment is mapped and accessible in iLearn for a specific competency element.
+    Returns a list of all PLE exam names under that element with mapped_in_ilearn and accessible flags."""
+    all_mappings, all_assessments_list, ilearn_assessments_list = await _cat_get_many(
+        "/content-mappings/", "/assessments/", "/ilearn/assessments"
+    )
+    all_assessments = {a["_id"]: a for a in all_assessments_list}
+    ilearn_exam_names = {a["cat_exam_name"] for a in ilearn_assessments_list if a.get("cat_exam_name")}
+
+    # PLEs that are intentionally blocked/pending and not accessible to users
+    BLOCKED_EXAMS = {"DSA-ARRAYS-EXPERT PROFICIENCY-PLE"}
+
+    elem_q = competency_element.strip().lower()
+    cm = next((m for m in all_mappings if elem_q in m.get("ce_unit", "").lower()), None)
+    if not cm:
+        return {"found": False, "competency_element": competency_element, "ple_exams": []}
+
+    ple_exams = []
+    for aid in cm.get("assessment_ids", []):
+        cat_a = all_assessments.get(aid)
+        if not cat_a or cat_a.get("name", "").upper() != "PLE":
+            continue
+        for gk in ["expert_groups", "advanced_groups"]:
+            for group in cat_a.get(gk, []):
+                for item in group.get("items", []):
+                    for ename in item.get("exams", []):
+                        mapped = ename in ilearn_exam_names
+                        accessible = mapped and ename not in BLOCKED_EXAMS
+                        ple_exams.append({
+                            "exam_name": ename,
+                            "mapped_in_ilearn": mapped,
+                            "accessible": accessible,
+                        })
+
+    if not ple_exams:
+        return {"found": True, "competency_element": cm.get("ce_unit"), "ple_exams": []}
+
+    return {"found": True, "competency_element": cm.get("ce_unit"), "ple_exams": ple_exams}
+
+
+@mcp.tool
 async def check_my_odyssey_config(user_id: str) -> dict:
     """Check odyssey (promotion tier) configuration for all competencies assigned to the user.
     Returns which competencies are configured and which are not."""

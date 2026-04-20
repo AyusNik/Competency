@@ -102,6 +102,15 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                                 for ename in item.get("exams", []):
                                     if ename in ilearn_assessments_map:
                                         ilearn_assessments.append(ilearn_assessments_map[ename])
+                                    else:
+                                        # CAT assessment not mapped in iLearn — include as unmapped
+                                        ilearn_assessments.append({
+                                            "_id": aid,
+                                            "cat_exam_name": ename,
+                                            "title": ename,
+                                            "type": assessment.get("name", "PLE"),
+                                            "unmapped": True,
+                                        })
 
             all_course_ids = [c["_id"] for c in ilearn_courses]
             all_assessment_ids = [a["_id"] for a in ilearn_assessments]
