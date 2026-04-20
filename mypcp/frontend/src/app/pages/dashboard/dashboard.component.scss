@@ -379,3 +379,59 @@
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+// ── PLE Popup ────────────────────────────────────────────────
+.ple-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+
+.ple-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.ple-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px; font-weight: 600; color: #1a1a2e;
+}
+
+.ple-close {
+  border: none; background: transparent; cursor: pointer;
+  color: #9ca3af; display: flex; align-items: center; padding: 2px;
+  border-radius: 4px;
+  &:hover { color: #374151; background: #f3f4f6; }
+  .material-icons { font-size: 18px; }
+}
+
+.ple-modal-body {
+  padding: 20px 18px 24px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.ple-status {
+  font-size: 11px; font-weight: 700; color: #d97706;
+  letter-spacing: 0.5px;
+}
+
+.ple-name {
+  font-size: 14px; font-weight: 500; color: #1a1a2e;
+}
+
+.ple-id {
+  font-size: 12px; color: #6b7280;
+}
+
+.ple-link {
+  margin-top: 8px;
+  font-size: 13px; font-weight: 500; color: #1d4ed8;
+  text-decoration: underline; cursor: pointer;
+  &:hover { color: #1e40af; }
+}

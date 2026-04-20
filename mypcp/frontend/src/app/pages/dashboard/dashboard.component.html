@@ -207,7 +207,7 @@
                         }
                         @for (a of unit.ilearn_assessments; track a._id) {
                           <div class="chip-row">
-                            <button class="ilearn-chip assess" (click)="openILearn(a, 'assessment')" [title]="a.title" [disabled]="!isAssessmentUnlocked(a, unit)" [class.locked]="!isAssessmentUnlocked(a, unit)">
+                            <button class="ilearn-chip assess" (click)="isPle(a) ? openPlePopup(a, unit) : openILearn(a, 'assessment')" [title]="a.title" [disabled]="!isAssessmentUnlocked(a, unit)" [class.locked]="!isAssessmentUnlocked(a, unit)">
                               <span class="material-icons">{{ isAssessmentUnlocked(a, unit) ? 'assignment' : 'lock' }}</span>
                               <span class="chip-label">{{ a.title }}</span>
                               <span class="chip-type">{{ a.type }}</span>
@@ -261,3 +261,27 @@
 
 <!-- Floating chatbot -->
 <app-chatbot />
+
+<!-- PLE Assessment Popup -->
+@if (plePopup) {
+  <div class="ple-overlay" (click)="closePlePopup()">
+    <div class="ple-modal" (click)="$event.stopPropagation()">
+      <div class="ple-modal-header">
+        <span>PLE – Proficiency Level Exams</span>
+        <button class="ple-close" (click)="closePlePopup()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="ple-modal-body">
+        <div class="ple-status">PENDING</div>
+        <div class="ple-name">{{ plePopup.assessment.title }}</div>
+        <div class="ple-id">{{ plePopup.assessment._id }}</div>
+        @if (plePopup.assessment.ilearn_url || true) {
+          <a class="ple-link" (click)="openPleILearn()" href="javascript:void(0)">
+            Open in iLearn
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+}

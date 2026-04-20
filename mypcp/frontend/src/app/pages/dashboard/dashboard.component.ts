@@ -202,5 +202,24 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     return (unit.completed_assessment_ids || []).includes(assessmentId);
   }
 
+  plePopup: { assessment: any; unit: any } | null = null;
+
+  openPlePopup(assessment: any, unit: any) {
+    if (this.isAssessmentCompleted(assessment._id, unit)) return;
+    this.plePopup = { assessment, unit };
+  }
+
+  closePlePopup() { this.plePopup = null; }
+
+  openPleILearn() {
+    if (!this.plePopup) return;
+    this.openILearn(this.plePopup.assessment, 'assessment');
+    this.closePlePopup();
+  }
+
+  isPle(assessment: any): boolean {
+    return (assessment.type || '').toUpperCase() === 'PLE';
+  }
+
   logout() { this.auth.logout(); }
 }
