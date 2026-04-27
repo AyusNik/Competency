@@ -35,6 +35,9 @@ async def get_training_detail(training_id: str, user: dict = Depends(decode_toke
 async def get_my_dashboard(user: dict = Depends(decode_token)):
     user_id = user["sub"]
 
+    # PLEs that are intentionally blocked/pending and not accessible to users
+    BLOCKED_EXAMS = {"DSA-ARRAYS-EXPERT PROFICIENCY-PLE"}
+
     mapping = await db.user_competency_mappings.find_one({"user_id": user_id})
     competency_names = mapping.get("competency_names", ["DSA"]) if mapping else ["DSA"]
 
@@ -96,12 +99,16 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                     assessment = all_assessments.get(aid)
                     if not assessment:
                         continue
+                    is_ple = assessment.get("name", "").upper() == "PLE"
                     for group_key in ["expert_groups", "advanced_groups"]:
                         for group in assessment.get(group_key, []):
                             for item in group.get("items", []):
                                 for ename in item.get("exams", []):
                                     if ename in ilearn_assessments_map:
-                                        ilearn_assessments.append(ilearn_assessments_map[ename])
+                                        entry = dict(ilearn_assessments_map[ename])
+                                        if is_ple:
+                                            entry["ple_accessible"] = ename not in BLOCKED_EXAMS
+                                        ilearn_assessments.append(entry)
                                     else:
                                         # CAT assessment not mapped in iLearn — include as unmapped
                                         ilearn_assessments.append({
@@ -110,6 +117,7 @@ async def get_my_dashboard(user: dict = Depends(decode_token)):
                                             "title": ename,
                                             "type": assessment.get("name", "PLE"),
                                             "unmapped": True,
+                                            "ple_accessible": False,
                                         })
 
             all_course_ids = [c["_id"] for c in ilearn_courses]

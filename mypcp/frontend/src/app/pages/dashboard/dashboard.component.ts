@@ -119,8 +119,14 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleAssessmentComplete(assessmentId: string, unit: any) {
+  isPleAccessible(assessment: any): boolean {
+    if (!this.isPle(assessment)) return true;
+    return assessment.ple_accessible === true;
+  }
+
+  toggleAssessmentComplete(assessmentId: string, unit: any, assessment: any) {
     if (this.isAssessmentCompleted(assessmentId, unit)) return;
+    if (this.isPle(assessment) && !this.isPleAccessible(assessment)) return;
     this.dashSvc.toggleAssessmentComplete(assessmentId).subscribe({
       next: () => {
         unit.completed_assessment_ids = [...(unit.completed_assessment_ids || []), assessmentId];

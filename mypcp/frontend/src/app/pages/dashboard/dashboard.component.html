@@ -213,7 +213,12 @@
                               <span class="chip-type">{{ a.type }}</span>
                             </button>
                             @if (isAssessmentUnlocked(a, unit)) {
-                              <button class="check-btn" (click)="toggleAssessmentComplete(a._id, unit); $event.stopPropagation()" [class.checked]="isAssessmentCompleted(a._id, unit)" [class.done]="isAssessmentCompleted(a._id, unit)" title="{{ isAssessmentCompleted(a._id, unit) ? 'Completed' : 'Mark complete' }}">
+                              <button class="check-btn"
+                                (click)="toggleAssessmentComplete(a._id, unit, a); $event.stopPropagation()"
+                                [class.checked]="isAssessmentCompleted(a._id, unit)"
+                                [class.done]="isAssessmentCompleted(a._id, unit)"
+                                [disabled]="isPle(a) && !isPleAccessible(a)"
+                                [title]="isPle(a) && !isPleAccessible(a) ? 'PLE not accessible' : isAssessmentCompleted(a._id, unit) ? 'Completed' : 'Mark complete'">
                                 <span class="material-icons">{{ isAssessmentCompleted(a._id, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
                               </button>
                             }

@@ -103,6 +103,19 @@ async def toggle_course_complete(course_id: str, user: dict = Depends(decode_tok
 @router.post("/assessment/{assessment_id}/complete")
 async def toggle_assessment_complete(assessment_id: str, user: dict = Depends(decode_token)):
     user_id = user["sub"]
+
+    # Block marking PLE complete if it is not accessible
+    BLOCKED_EXAMS = {"DSA-ARRAYS-EXPERT PROFICIENCY-PLE"}
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.get(f"{CAT_API}/ilearn/assessments")
+        ilearn_assessments = r.json() if r.status_code == 200 else []
+    assessment = next((a for a in ilearn_assessments if a["_id"] == assessment_id), None)
+    if assessment and assessment.get("type", "").upper() == "PLE":
+        exam_name = assessment.get("cat_exam_name", "")
+        if not exam_name or exam_name in BLOCKED_EXAMS:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="This PLE assessment is not accessible and cannot be marked complete.")
+
     doc = await db.user_progress.find_one({"user_id": user_id})
     completed = set(doc.get("completed_assessment_ids", [])) if doc else set()
 

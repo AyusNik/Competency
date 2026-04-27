@@ -17,10 +17,10 @@ class ChatRequest(BaseModel):
 
 def _extract_context_sentence(new_messages: list) -> str:
     """Extract the display_message or build the context sentence from tool results."""
-    # First pass: collect all tool results for context
     training_name = ""
     element_name = ""
-    unit_name = ""
+    ple_exam_name = ""
+    ple_inaccessible = False
 
     for m in new_messages:
         if not isinstance(m, ToolMessage):
@@ -39,27 +39,39 @@ def _extract_context_sentence(new_messages: list) -> str:
         if "date_locked" in data and "unit" in data:
             if data.get("date_locked"):
                 unit = data.get("unit", "")
-                return f"The assessment for **'{unit}'** is currently locked. To get access or resolve this, please contact your Business Line Manager."
+                return f"The assessment for **'{unit}'** is currently locked. To resolve this issue, please connect with your Business Line Manager:"
 
         # Training has no courses
         if "has_courses" in data and "training_name" in data:
             if not data.get("has_courses"):
                 training_name = data.get("training_name", "this training")
 
+        # PLE mapped check — capture inaccessible PLE
+        if "ple_exams" in data:
+            element_name = data.get("competency_element", element_name)
+            for exam in data.get("ple_exams", []):
+                if not exam.get("accessible", True):
+                    ple_exam_name = exam.get("exam_name", "")
+                    ple_inaccessible = True
+
         # Validate element — capture matched element name
         if "matched_name" in data and data.get("valid") and "available_elements" not in data:
             element_name = data.get("matched_name", "")
 
-        # Validate unit — capture matched unit name
-        if "matched_name" in data and data.get("valid") and "available_units" not in data and not element_name:
-            unit_name = data.get("matched_name", "")
+    # PLE inaccessible
+    if ple_inaccessible and ple_exam_name:
+        parts = [f"The PLE **'{ple_exam_name}'**"]
+        if element_name:
+            parts.append(f"under **'{element_name}'**")
+        parts.append("is not working in iLearn. To resolve this issue, please connect with your Business Line Manager:")
+        return " ".join(parts)
 
     # Build no-courses sentence if training has no courses
     if training_name:
-        parts = [f"No courses are yet mapped to the training **'{training_name}'**"]
+        parts = [f"No courses are mapped under the training **'{training_name}'**"]
         if element_name:
             parts.append(f"for the competency element **'{element_name}'**")
-        parts.append(". To resolve this, please contact your Business Line Manager.")
+        parts.append(". To resolve this issue, please connect with your Business Line Manager:")
         return " ".join(parts)
 
     return ""
@@ -72,6 +84,8 @@ def _ensure_context_prefix(ai_reply: str, new_messages: list) -> str:
         "here are your business line",
         "**name:**",
         "- **name:**",
+        "👤",
+        "your business line manager",
     ]
     reply_lower = ai_reply.strip().lower()
     starts_with_manager = any(reply_lower.startswith(s) for s in manager_starters)
