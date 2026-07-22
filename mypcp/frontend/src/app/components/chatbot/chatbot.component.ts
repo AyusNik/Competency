@@ -53,13 +53,13 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   private certStep1Path = '/chat/cert-step-2.jpg';
   private certStep2Path = '/chat/cert-step-1.png';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
     this.userName = localStorage.getItem('user_name') || 'User';
     this.roomId = this.parseUserId() || 'room_' + Date.now();
     this.micSupported = !!(typeof SpeechRecognition !== 'undefined' || typeof webkitSpeechRecognition !== 'undefined');
-    this.http.delete(`${API}/chat/history`).subscribe({ error: () => {} });
+    this.http.delete(`${API}/chat/history`).subscribe({ error: () => { } });
     const prefill = localStorage.getItem('chatbot_prefill');
     if (prefill) {
       this.open = true;
@@ -217,7 +217,7 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.managerMode = false;
     this.managerConnected = false;
     this.messages = [];
-    this.http.delete(`${API}/chat/history`).subscribe({ error: () => {} });
+    this.http.delete(`${API}/chat/history`).subscribe({ error: () => { } });
   }
 
   clearChat() {
@@ -253,6 +253,6 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   private scrollToBottom() {
-    try { this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' }); } catch {}
+    try { this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' }); } catch { }
   }
 }

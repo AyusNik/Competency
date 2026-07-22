@@ -5,7 +5,7 @@ const API = 'http://localhost:8001';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getMyDashboard() {
     return this.http.get<any>(`${API}/dashboard/me`);

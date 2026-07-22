@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private dashSvc: DashboardService,
     private auth: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.dashSvc.getMyDashboard().subscribe({

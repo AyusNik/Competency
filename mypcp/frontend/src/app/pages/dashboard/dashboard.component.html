@@ -34,232 +34,245 @@
         <button class="cert-link" (click)="goToCertifications()">Certifications</button>
       </div>
       @if (data) {
-        <div class="topbar-user">
-          <span class="material-icons user-icon">account_circle</span>
-          <span>{{ data.user.name }}</span>
-          <span class="material-icons arrow">arrow_drop_down</span>
-        </div>
+      <div class="topbar-user">
+        <span class="material-icons user-icon">account_circle</span>
+        <span>{{ data.user.name }}</span>
+        <span class="material-icons arrow">arrow_drop_down</span>
+      </div>
       }
     </header>
 
     <div class="content">
       @if (loading) {
-        <div class="loading">
-          <span class="material-icons spin">autorenew</span> Loading your dashboard...
-        </div>
+      <div class="loading">
+        <span class="material-icons spin">autorenew</span> Loading your dashboard...
+      </div>
       } @else if (error) {
-        <div class="error-state">{{ error }}</div>
+      <div class="error-state">{{ error }}</div>
       } @else {
-        <h2 class="page-title">MyPCP Dashboard</h2>
+      <h2 class="page-title">MyPCP Dashboard</h2>
 
-        <div class="dashboard-layout">
-          <!-- LEFT PANEL -->
-          <div class="left-panel">
-            <!-- Profile Card -->
-            <div class="profile-card">
-              <div class="profile-avatar">
-                <span class="material-icons">account_circle</span>
+      <div class="dashboard-layout">
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+          <!-- Profile Card -->
+          <div class="profile-card">
+            <div class="profile-avatar">
+              <span class="material-icons">account_circle</span>
+            </div>
+            <div class="profile-info">
+              <div class="profile-name">{{ data.user.name }}</div>
+              <div class="profile-title">{{ data.user.job_title || 'Employee' }}</div>
+            </div>
+            @if (data.current_position && hasOdysseyTiers) {
+            <div class="current-position-row">
+              <span class="material-icons cp-icon">workspace_premium</span>
+              <span class="cp-label">Current Position</span>
+              <span class="cp-value">{{ data.current_position }}</span>
+            </div>
+            }
+            <div class="compliance-row">
+              <span class="compliance-label">Job Compliance</span>
+              <span class="compliance-val">0%</span>
+            </div>
+            <div class="compliance-bar">
+              <div class="compliance-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Donut Chart -->
+          <div class="donut-card">
+            <canvas #donutCanvas width="160" height="160"></canvas>
+            <div class="legend">
+              <div class="legend-item">
+                <span class="dot" style="background:#93c5fd"></span>
+                <span>Basic</span>
+                <span class="cnt">{{ data.level_counts.B }} Elements</span>
               </div>
-              <div class="profile-info">
-                <div class="profile-name">{{ data.user.name }}</div>
-                <div class="profile-title">{{ data.user.job_title || 'Employee' }}</div>
+              <div class="legend-item">
+                <span class="dot" style="background:#60a5fa"></span>
+                <span>Intermediate</span>
+                <span class="cnt">{{ data.level_counts.I }} Elements</span>
               </div>
-              @if (data.current_position && hasOdysseyTiers) {
-                <div class="current-position-row">
-                  <span class="material-icons cp-icon">workspace_premium</span>
-                  <span class="cp-label">Current Position</span>
-                  <span class="cp-value">{{ data.current_position }}</span>
-                </div>
+              <div class="legend-item">
+                <span class="dot" style="background:#2563eb"></span>
+                <span>Advanced</span>
+                <span class="cnt">{{ data.level_counts.A }} Elements</span>
+              </div>
+              <div class="legend-item">
+                <span class="dot" style="background:#1e3a8a"></span>
+                <span>Expert</span>
+                <span class="cnt">{{ data.level_counts.E }} Elements</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- My Odyssey — only show if at least one competency has promotion tiers configured -->
+          @if (hasOdysseyTiers) {
+          <div class="odyssey-card">
+            <div class="odyssey-header">
+              <span class="material-icons odyssey-icon">explore</span>
+              <span class="odyssey-title">MY ODYSSEY</span>
+              @if (data.current_position) {
+              <span class="odyssey-current-badge">{{ data.current_position }}</span>
               }
-              <div class="compliance-row">
-                <span class="compliance-label">Job Compliance</span>
-                <span class="compliance-val">0%</span>
-              </div>
-              <div class="compliance-bar"><div class="compliance-fill" style="width:0%"></div></div>
             </div>
-
-            <!-- Donut Chart -->
-            <div class="donut-card">
-              <canvas #donutCanvas width="160" height="160"></canvas>
-              <div class="legend">
-                <div class="legend-item">
-                  <span class="dot" style="background:#93c5fd"></span>
-                  <span>Basic</span>
-                  <span class="cnt">{{ data.level_counts.B }} Elements</span>
+            @if (data.odyssey?.length) {
+            @for (o of data.odyssey; track o.competency; let last = $last) {
+            <div class="odyssey-track" [class.locked]="o.locked">
+              <div class="odyssey-comp-name">
+                {{ o.competency }}
+                @if (o.locked) { <span class="lock-chip"><span class="material-icons">lock</span> Complete previous
+                  first</span> }
+                @if (o.is_complete) { <span class="done-chip"><span class="material-icons">check_circle</span>
+                  Complete</span> }
+              </div>
+              <div class="odyssey-roles">
+                <span class="role-from">{{ o.promotion_from || '' }}</span>
+                <span class="role-to">{{ o.promotion_to || '' }}</span>
+              </div>
+              <div class="odyssey-bar-wrap">
+                <div class="odyssey-bar">
+                  <div class="odyssey-fill" [style.width.%]="o.locked ? 0 : o.progress_pct"></div>
+                  <div class="odyssey-thumb" [style.left.%]="o.locked ? 0 : o.progress_pct"></div>
                 </div>
-                <div class="legend-item">
-                  <span class="dot" style="background:#60a5fa"></span>
-                  <span>Intermediate</span>
-                  <span class="cnt">{{ data.level_counts.I }} Elements</span>
-                </div>
-                <div class="legend-item">
-                  <span class="dot" style="background:#2563eb"></span>
-                  <span>Advanced</span>
-                  <span class="cnt">{{ data.level_counts.A }} Elements</span>
-                </div>
-                <div class="legend-item">
-                  <span class="dot" style="background:#1e3a8a"></span>
-                  <span>Expert</span>
-                  <span class="cnt">{{ data.level_counts.E }} Elements</span>
-                </div>
+              </div>
+              <div class="odyssey-meta">
+                <span class="odyssey-pct">{{ o.locked ? '—' : o.progress_pct + '%' }}</span>
+                <span class="odyssey-frac">{{ o.elements_done }}/{{ o.elements_total }} elements</span>
               </div>
             </div>
+            @if (!last) { <div class="odyssey-chain-arrow"><span class="material-icons">arrow_downward</span></div> }
+            }
+            } @else {
+            <div class="odyssey-empty">No competencies assigned</div>
+            }
+          </div>
+          } <!-- end odyssey @if -->
 
-            <!-- My Odyssey — only show if at least one competency has promotion tiers configured -->
-            @if (hasOdysseyTiers) {
-            <div class="odyssey-card">
-              <div class="odyssey-header">
-                <span class="material-icons odyssey-icon">explore</span>
-                <span class="odyssey-title">MY ODYSSEY</span>
-                @if (data.current_position) {
-                  <span class="odyssey-current-badge">{{ data.current_position }}</span>
-                }
-              </div>
-              @if (data.odyssey?.length) {
-                @for (o of data.odyssey; track o.competency; let last = $last) {
-                  <div class="odyssey-track" [class.locked]="o.locked">
-                    <div class="odyssey-comp-name">
-                      {{ o.competency }}
-                      @if (o.locked) { <span class="lock-chip"><span class="material-icons">lock</span> Complete previous first</span> }
-                      @if (o.is_complete) { <span class="done-chip"><span class="material-icons">check_circle</span> Complete</span> }
-                    </div>
-                    <div class="odyssey-roles">
-                        <span class="role-from">{{ o.promotion_from || '' }}</span>
-                        <span class="role-to">{{ o.promotion_to || '' }}</span>
-                      </div>
-                      <div class="odyssey-bar-wrap">
-                        <div class="odyssey-bar">
-                          <div class="odyssey-fill" [style.width.%]="o.locked ? 0 : o.progress_pct"></div>
-                          <div class="odyssey-thumb" [style.left.%]="o.locked ? 0 : o.progress_pct"></div>
-                        </div>
-                      </div>
-                      <div class="odyssey-meta">
-                        <span class="odyssey-pct">{{ o.locked ? '—' : o.progress_pct + '%' }}</span>
-                        <span class="odyssey-frac">{{ o.elements_done }}/{{ o.elements_total }} elements</span>
-                      </div>
+          <!-- Competency Groups -->
+          @for (comp of data.competencies; track comp._id) {
+          <div class="comp-group">
+            <span class="comp-name">{{ comp.name }}</span>
+            <span class="comp-pct">100%</span>
+          </div>
+          <div class="comp-divider"><span>AND</span></div>
+          }
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+          <!-- Search bar -->
+          <div class="search-bar">
+            <input type="text" [(ngModel)]="search" (ngModelChange)="page=1" placeholder="Search competency units..." />
+            @if (search) {
+            <button class="clear-btn" (click)="clearSearch()">
+              <span class="material-icons">close</span>
+            </button>
+            }
+            <button class="filter-btn">
+              <span class="material-icons">tune</span>
+            </button>
+          </div>
+
+          <!-- Table header -->
+          <div class="table-header">
+            <span>Competency Unit/Element</span>
+            <span>Element Level</span>
+          </div>
+
+          <!-- Units list -->
+          <div class="units-list">
+            @for (unit of pagedUnits; track unit.unit_id) {
+            <div class="unit-row">
+              <div class="unit-left">
+                <div class="unit-category">{{ unit.plr_table || 'COMPETENCY' }}</div>
+                <div class="unit-name">{{ unit.unit_name }}</div>
+                <!-- Trainings grouped -->
+                @if (unit.trainings_grouped?.length || unit.ilearn_assessments?.length) {
+                <div class="ilearn-links">
+                  @for (t of unit.trainings_grouped; track t.training_id) {
+                  <div class="chip-row">
+                    <button class="ilearn-chip training" (click)="openTraining(t.training_id)"
+                      [title]="t.training_name">
+                      <span class="material-icons">menu_book</span>
+                      <span class="chip-label">{{ t.training_name }}</span>
+                      <span class="chip-type">{{ t.courses.length }} course{{ t.courses.length !== 1 ? 's' : ''
+                        }}</span>
+                    </button>
+                    <button class="check-btn" (click)="toggleTrainingComplete(t, unit); $event.stopPropagation()"
+                      [class.checked]="isTrainingComplete(t, unit)"
+                      [title]="isTrainingComplete(t, unit) ? 'Mark incomplete' : 'Mark all courses complete'">
+                      <span class="material-icons">{{ isTrainingComplete(t, unit) ? 'check_circle' :
+                        'radio_button_unchecked' }}</span>
+                    </button>
                   </div>
-                  @if (!last) { <div class="odyssey-chain-arrow"><span class="material-icons">arrow_downward</span></div> }
+                  }
+                  @for (a of unit.ilearn_assessments; track a._id) {
+                  <div class="chip-row">
+                    <button class="ilearn-chip assess"
+                      (click)="isPle(a) ? openPlePopup(a, unit) : openILearn(a, 'assessment')" [title]="a.title"
+                      [disabled]="!isAssessmentUnlocked(a, unit)" [class.locked]="!isAssessmentUnlocked(a, unit)">
+                      <span class="material-icons">{{ isAssessmentUnlocked(a, unit) ? 'assignment' : 'lock' }}</span>
+                      <span class="chip-label">{{ a.title }}</span>
+                      <span class="chip-type">{{ a.type }}</span>
+                    </button>
+                    @if (isAssessmentUnlocked(a, unit)) {
+                    <button class="check-btn"
+                      (click)="toggleAssessmentComplete(a._id, unit, a); $event.stopPropagation()"
+                      [class.checked]="isAssessmentCompleted(a._id, unit)"
+                      [class.done]="isAssessmentCompleted(a._id, unit)" [disabled]="isPle(a) && !isPleAccessible(a)"
+                      [title]="isPle(a) && !isPleAccessible(a) ? 'PLE not accessible' : isAssessmentCompleted(a._id, unit) ? 'Completed' : 'Mark complete'">
+                      <span class="material-icons">{{ isAssessmentCompleted(a._id, unit) ? 'check_circle' :
+                        'radio_button_unchecked' }}</span>
+                    </button>
+                    }
+                  </div>
+                  }
+                </div>
                 }
-              } @else {
-                <div class="odyssey-empty">No competencies assigned</div>
-              }
-            </div>
-            } <!-- end odyssey @if -->
-
-            <!-- Competency Groups -->
-            @for (comp of data.competencies; track comp._id) {
-              <div class="comp-group">
-                <span class="comp-name">{{ comp.name }}</span>
-                <span class="comp-pct">100%</span>
               </div>
-              <div class="comp-divider"><span>AND</span></div>
+              <div class="level-indicator">
+                <span class="lvl">B</span>
+                <div class="lvl-bar">
+                  <div class="lvl-fill b"></div>
+                </div>
+                <span class="lvl">I</span>
+                <div class="lvl-bar">
+                  <div class="lvl-fill i"></div>
+                </div>
+                <span class="lvl">A</span>
+                <div class="lvl-bar">
+                  <div class="lvl-fill a"></div>
+                </div>
+                <span class="lvl">E</span>
+                <div class="lvl-bar">
+                  <div class="lvl-fill e"></div>
+                </div>
+              </div>
+            </div>
+            }
+            @if (filteredUnits.length === 0) {
+            <div class="empty-state">
+              <span class="material-icons">search_off</span>
+              <p>No competency units found</p>
+            </div>
             }
           </div>
 
-          <!-- RIGHT PANEL -->
-          <div class="right-panel">
-            <!-- Search bar -->
-            <div class="search-bar">
-              <input
-                type="text"
-                [(ngModel)]="search"
-                (ngModelChange)="page=1"
-                placeholder="Search competency units..."
-              />
-              @if (search) {
-                <button class="clear-btn" (click)="clearSearch()">
-                  <span class="material-icons">close</span>
-                </button>
-              }
-              <button class="filter-btn">
-                <span class="material-icons">tune</span>
-              </button>
-            </div>
-
-            <!-- Table header -->
-            <div class="table-header">
-              <span>Competency Unit/Element</span>
-              <span>Element Level</span>
-            </div>
-
-            <!-- Units list -->
-            <div class="units-list">
-              @for (unit of pagedUnits; track unit.unit_id) {
-                <div class="unit-row">
-                  <div class="unit-left">
-                    <div class="unit-category">{{ unit.plr_table || 'COMPETENCY' }}</div>
-                    <div class="unit-name">{{ unit.unit_name }}</div>
-                    <!-- Trainings grouped -->
-                    @if (unit.trainings_grouped?.length || unit.ilearn_assessments?.length) {
-                      <div class="ilearn-links">
-                        @for (t of unit.trainings_grouped; track t.training_id) {
-                          <div class="chip-row">
-                            <button class="ilearn-chip training" (click)="openTraining(t.training_id)" [title]="t.training_name">
-                              <span class="material-icons">menu_book</span>
-                              <span class="chip-label">{{ t.training_name }}</span>
-                              <span class="chip-type">{{ t.courses.length }} course{{ t.courses.length !== 1 ? 's' : '' }}</span>
-                            </button>
-                            <button class="check-btn" (click)="toggleTrainingComplete(t, unit); $event.stopPropagation()"
-                              [class.checked]="isTrainingComplete(t, unit)"
-                              [title]="isTrainingComplete(t, unit) ? 'Mark incomplete' : 'Mark all courses complete'">
-                              <span class="material-icons">{{ isTrainingComplete(t, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
-                            </button>
-                          </div>
-                        }
-                        @for (a of unit.ilearn_assessments; track a._id) {
-                          <div class="chip-row">
-                            <button class="ilearn-chip assess" (click)="isPle(a) ? openPlePopup(a, unit) : openILearn(a, 'assessment')" [title]="a.title" [disabled]="!isAssessmentUnlocked(a, unit)" [class.locked]="!isAssessmentUnlocked(a, unit)">
-                              <span class="material-icons">{{ isAssessmentUnlocked(a, unit) ? 'assignment' : 'lock' }}</span>
-                              <span class="chip-label">{{ a.title }}</span>
-                              <span class="chip-type">{{ a.type }}</span>
-                            </button>
-                            @if (isAssessmentUnlocked(a, unit)) {
-                              <button class="check-btn"
-                                (click)="toggleAssessmentComplete(a._id, unit, a); $event.stopPropagation()"
-                                [class.checked]="isAssessmentCompleted(a._id, unit)"
-                                [class.done]="isAssessmentCompleted(a._id, unit)"
-                                [disabled]="isPle(a) && !isPleAccessible(a)"
-                                [title]="isPle(a) && !isPleAccessible(a) ? 'PLE not accessible' : isAssessmentCompleted(a._id, unit) ? 'Completed' : 'Mark complete'">
-                                <span class="material-icons">{{ isAssessmentCompleted(a._id, unit) ? 'check_circle' : 'radio_button_unchecked' }}</span>
-                              </button>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                  </div>
-                  <div class="level-indicator">
-                    <span class="lvl">B</span>
-                    <div class="lvl-bar"><div class="lvl-fill b"></div></div>
-                    <span class="lvl">I</span>
-                    <div class="lvl-bar"><div class="lvl-fill i"></div></div>
-                    <span class="lvl">A</span>
-                    <div class="lvl-bar"><div class="lvl-fill a"></div></div>
-                    <span class="lvl">E</span>
-                    <div class="lvl-bar"><div class="lvl-fill e"></div></div>
-                  </div>
-                </div>
-              }
-              @if (filteredUnits.length === 0) {
-                <div class="empty-state">
-                  <span class="material-icons">search_off</span>
-                  <p>No competency units found</p>
-                </div>
-              }
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination">
-              <span>{{ (page-1)*pageSize + 1 }} – {{ [page*pageSize, filteredUnits.length] | min }} of {{ filteredUnits.length }}</span>
-              <button (click)="page=page-1" [disabled]="page===1">
-                <span class="material-icons">chevron_left</span>
-              </button>
-              <button (click)="page=page+1" [disabled]="page>=totalPages">
-                <span class="material-icons">chevron_right</span>
-              </button>
-            </div>
+          <!-- Pagination -->
+          <div class="pagination">
+            <span>{{ (page-1)*pageSize + 1 }} – {{ [page*pageSize, filteredUnits.length] | min }} of {{
+              filteredUnits.length }}</span>
+            <button (click)="page=page-1" [disabled]="page===1">
+              <span class="material-icons">chevron_left</span>
+            </button>
+            <button (click)="page=page+1" [disabled]="page>=totalPages">
+              <span class="material-icons">chevron_right</span>
+            </button>
           </div>
         </div>
+      </div>
       }
     </div>
   </main>
@@ -267,29 +280,29 @@
 
 <!-- PLE Assessment Popup -->
 @if (plePopup) {
-  <div class="ple-overlay" (click)="closePlePopup()">
-    <div class="ple-modal" (click)="$event.stopPropagation()">
-      <div class="ple-modal-header">
-        <span>PLE – Proficiency Level Exams</span>
-        <button class="ple-close" (click)="closePlePopup()">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div class="ple-modal-body">
-        <div class="ple-status">PENDING</div>
-        @if (plePopup.assessment.unmapped) {
-          <div class="ple-name">{{ plePopup.assessment.title }}</div>
-          <a class="ple-link" (click)="openUnmappedPleILearn()" href="javascript:void(0)">
-            Open in iLearn
-          </a>
-        } @else if (plePopup.assessment.cat_exam_name !== 'DSA-ARRAYS-EXPERT PROFICIENCY-PLE') {
-          <div class="ple-name">{{ plePopup.assessment.title }}</div>
-          <div class="ple-id">{{ plePopup.assessment._id }}</div>
-          <a class="ple-link" (click)="openPleILearn()" href="javascript:void(0)">
-            Open in iLearn
-          </a>
-        }
-      </div>
+<div class="ple-overlay" (click)="closePlePopup()">
+  <div class="ple-modal" (click)="$event.stopPropagation()">
+    <div class="ple-modal-header">
+      <span>PLE – Proficiency Level Exams</span>
+      <button class="ple-close" (click)="closePlePopup()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="ple-modal-body">
+      <div class="ple-status">PENDING</div>
+      @if (plePopup.assessment.unmapped) {
+      <div class="ple-name">{{ plePopup.assessment.title }}</div>
+      <a class="ple-link" (click)="openUnmappedPleILearn()" href="javascript:void(0)">
+        Open in iLearn
+      </a>
+      } @else if (plePopup.assessment.cat_exam_name !== 'DSA-ARRAYS-EXPERT PROFICIENCY-PLE') {
+      <div class="ple-name">{{ plePopup.assessment.title }}</div>
+      <div class="ple-id">{{ plePopup.assessment._id }}</div>
+      <a class="ple-link" (click)="openPleILearn()" href="javascript:void(0)">
+        Open in iLearn
+      </a>
+      }
     </div>
   </div>
+</div>
 }

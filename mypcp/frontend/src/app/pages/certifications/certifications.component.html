@@ -1,157 +1,173 @@
 <div class="cert-shell">
-  <header class="cert-topbar">
-    <div class="top-left">
-      <div class="logo-block">
-        <span class="material-icons">hub</span>
-      </div>
-      <div class="brand">MyPCP</div>
-      <button class="nav-link" (click)="goToDashboard()">Dashboard</button>
-      <div class="nav-link active">Certifications</div>
-    </div>
-    <div class="top-right">
-      <span class="material-icons">help_outline</span>
-      <span class="material-icons">info</span>
-      <span class="material-icons">account_circle</span>
-    </div>
-  </header>
-
-  @if (loading) {
-    <div class="state loading">Loading certifications...</div>
-  } @else if (error) {
-    <div class="state error">{{ error }}</div>
-  } @else {
-    <div class="cert-content">
-      <aside class="left-column">
-        <div class="profile-card">
-          <div class="avatar"><span class="material-icons">account_circle</span></div>
-          <div>
-            <div class="name">{{ userName }}</div>
-            <div class="title">{{ jobTitle }}</div>
-          </div>
-        </div>
-
-        <div class="donut-card">
-          <div class="donut-wrap">
-            <svg viewBox="0 0 120 120" class="donut-svg">
-              <circle cx="60" cy="60" r="42" class="donut-bg"></circle>
-              <circle cx="60" cy="60" r="42" class="donut-fill" [style.strokeDasharray]="(overallTrainingCoefficient * 2.64) + ' 264'"></circle>
-            </svg>
-            <div class="donut-text">
-              <div class="count">{{ totalCertifications }}</div>
-              <div class="label">Certifications</div>
+    <header class="cert-topbar">
+        <div class="top-left">
+            <div class="logo-block">
+                <span class="material-icons">hub</span>
             </div>
-          </div>
-          <div class="legend-title">Certifications</div>
-          <div class="legend-item">Generic ({{ summary?.generic?.total || 0 }})</div>
-          <div class="legend-item">Function ({{ summary?.function?.total || 0 }})</div>
-          <div class="legend-item">Local ({{ summary?.local?.total || 0 }})</div>
-          <div class="legend-item">Learning ({{ summary?.learning?.total || 0 }})</div>
+            <div class="brand">MyPCP</div>
+            <button class="nav-link" (click)="goToDashboard()">Dashboard</button>
+            <div class="nav-link active">Certifications</div>
         </div>
-
-        <div class="coefficient-card">
-          <div class="label">Overall Training Coefficient</div>
-          <div class="percent">{{ overallTrainingCoefficient }}%</div>
-          <div class="meter"><div class="meter-fill" [style.width.%]="overallTrainingCoefficient"></div></div>
+        <div class="top-right">
+            <span class="material-icons">help_outline</span>
+            <span class="material-icons">info</span>
+            <span class="material-icons">account_circle</span>
         </div>
-      </aside>
+    </header>
 
-      <section class="main-column">
-        <div class="metric-grid">
-          <div class="metric summary">
-            <div class="metric-head">SUMMARY <span>{{ cardPct('summary') }}%</span></div>
-            <div class="metric-val">{{ cardValue('summary') }}</div>
-            <div class="bar"><div [style.width.%]="cardPct('summary')"></div></div>
-          </div>
-          <div class="metric">
-            <div class="metric-head">GENERIC <span>{{ cardPct('generic') }}%</span></div>
-            <div class="metric-val">{{ cardValue('generic') }}</div>
-            <div class="bar"><div [style.width.%]="cardPct('generic')"></div></div>
-          </div>
-          <div class="metric">
-            <div class="metric-head">FUNCTION <span>{{ cardPct('function') }}%</span></div>
-            <div class="metric-val">{{ cardValue('function') }}</div>
-            <div class="bar"><div [style.width.%]="cardPct('function')"></div></div>
-          </div>
-          <div class="metric">
-            <div class="metric-head">LOCAL <span>{{ cardPct('local') }}%</span></div>
-            <div class="metric-val">{{ cardValue('local') }}</div>
-            <div class="bar"><div [style.width.%]="cardPct('local')"></div></div>
-          </div>
-          <div class="metric">
-            <div class="metric-head">LEARNING <span>{{ cardPct('learning') }}%</span></div>
-            <div class="metric-val">{{ cardValue('learning') }}</div>
-            <div class="bar"><div [style.width.%]="cardPct('learning')"></div></div>
-          </div>
-        </div>
+    @if (loading) {
+    <div class="state loading">Loading certifications...</div>
+    } @else if (error) {
+    <div class="state error">{{ error }}</div>
+    } @else {
+    <div class="cert-content">
+        <aside class="left-column">
+            <div class="profile-card">
+                <div class="avatar"><span class="material-icons">account_circle</span></div>
+                <div>
+                    <div class="name">{{ userName }}</div>
+                    <div class="title">{{ jobTitle }}</div>
+                </div>
+            </div>
 
-        <div class="filters">
-          <input type="text" placeholder="Certification Name" [(ngModel)]="search" />
-          <select [(ngModel)]="selectedType">
-            <option value="">Certification Type</option>
-            <option value="ilearn">iLearn</option>
-            <option value="xylem">Xylem</option>
-            <option value="cbt">CBT</option>
-          </select>
-          <select [(ngModel)]="selectedValidity">
-            <option value="">Validity</option>
-            <option value="valid">Valid</option>
-            <option value="expired">Expired</option>
-            <option value="pending">Pending</option>
-          </select>
-          <button class="clear" (click)="clearFilters()">Clear</button>
-        </div>
+            <div class="donut-card">
+                <div class="donut-wrap">
+                    <svg viewBox="0 0 120 120" class="donut-svg">
+                        <circle cx="60" cy="60" r="42" class="donut-bg"></circle>
+                        <circle cx="60" cy="60" r="42" class="donut-fill"
+                            [style.strokeDasharray]="(overallTrainingCoefficient * 2.64) + ' 264'"></circle>
+                    </svg>
+                    <div class="donut-text">
+                        <div class="count">{{ totalCertifications }}</div>
+                        <div class="label">Certifications</div>
+                    </div>
+                </div>
+                <div class="legend-title">Certifications</div>
+                <div class="legend-item">Generic ({{ summary?.generic?.total || 0 }})</div>
+                <div class="legend-item">Function ({{ summary?.function?.total || 0 }})</div>
+                <div class="legend-item">Local ({{ summary?.local?.total || 0 }})</div>
+                <div class="legend-item">Learning ({{ summary?.learning?.total || 0 }})</div>
+            </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>CERTIFICATION NAME</th>
-                <th>CERTIFICATION TYPE</th>
-                <th>VALIDITY</th>
-                <th>EXPIRES ON</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (cert of filteredCertifications; track cert.id) {
-                <tr (click)="selectCertification(cert)" [class.active]="selected?.id === cert.id">
-                  <td>{{ cert.name }}</td>
-                  <td>{{ prettyType(cert.certification_type) }}</td>
-                  <td>
-                    <span class="status-dot" [class]="statusDotClass(cert.validity_status)"></span>
-                    {{ prettyStatus(cert.validity_status) }}
-                  </td>
-                  <td>{{ cert.expires_on }}</td>
-                </tr>
-              }
-              @if (filteredCertifications.length === 0) {
-                <tr>
-                  <td colspan="4" class="empty">No certifications found</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
+            <div class="coefficient-card">
+                <div class="label">Overall Training Coefficient</div>
+                <div class="percent">{{ overallTrainingCoefficient }}%</div>
+                <div class="meter">
+                    <div class="meter-fill" [style.width.%]="overallTrainingCoefficient"></div>
+                </div>
+            </div>
+        </aside>
 
-      <aside class="detail-column">
-        @if (!selected) {
-          <div class="placeholder-card">
-            <span class="material-icons">assignment</span>
-            <div class="title">Select a Certification from the list</div>
-            <div class="desc">Nothing is selected</div>
-          </div>
-        } @else {
-          <div class="detail-card">
-            <div class="detail-title">{{ selected.name }}</div>
-            <div class="detail-row"><span>Type</span><strong>{{ prettyType(selected.certification_type) }}</strong></div>
-            <div class="detail-row"><span>Category</span><strong>{{ selected.certification_category || 'N/A' }}</strong></div>
-            <div class="detail-row"><span>Validity</span><strong>{{ prettyStatus(selected.validity_status) }}</strong></div>
-            <div class="detail-row"><span>Expires On</span><strong>{{ selected.expires_on }}</strong></div>
-            <div class="detail-row"><span>Provider</span><strong>{{ selected.provider }}</strong></div>
-            <p class="desc">{{ selected.description || 'No additional description available.' }}</p>
-          </div>
-        }
-      </aside>
+        <section class="main-column">
+            <div class="metric-grid">
+                <div class="metric summary">
+                    <div class="metric-head">SUMMARY <span>{{ cardPct('summary') }}%</span></div>
+                    <div class="metric-val">{{ cardValue('summary') }}</div>
+                    <div class="bar">
+                        <div [style.width.%]="cardPct('summary')"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-head">GENERIC <span>{{ cardPct('generic') }}%</span></div>
+                    <div class="metric-val">{{ cardValue('generic') }}</div>
+                    <div class="bar">
+                        <div [style.width.%]="cardPct('generic')"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-head">FUNCTION <span>{{ cardPct('function') }}%</span></div>
+                    <div class="metric-val">{{ cardValue('function') }}</div>
+                    <div class="bar">
+                        <div [style.width.%]="cardPct('function')"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-head">LOCAL <span>{{ cardPct('local') }}%</span></div>
+                    <div class="metric-val">{{ cardValue('local') }}</div>
+                    <div class="bar">
+                        <div [style.width.%]="cardPct('local')"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-head">LEARNING <span>{{ cardPct('learning') }}%</span></div>
+                    <div class="metric-val">{{ cardValue('learning') }}</div>
+                    <div class="bar">
+                        <div [style.width.%]="cardPct('learning')"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <input type="text" placeholder="Certification Name" [(ngModel)]="search" />
+                <select [(ngModel)]="selectedType">
+                    <option value="">Certification Type</option>
+                    <option value="ilearn">iLearn</option>
+                    <option value="xylem">Xylem</option>
+                    <option value="cbt">CBT</option>
+                </select>
+                <select [(ngModel)]="selectedValidity">
+                    <option value="">Validity</option>
+                    <option value="valid">Valid</option>
+                    <option value="expired">Expired</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <button class="clear" (click)="clearFilters()">Clear</button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CERTIFICATION NAME</th>
+                            <th>CERTIFICATION TYPE</th>
+                            <th>VALIDITY</th>
+                            <th>EXPIRES ON</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (cert of filteredCertifications; track cert.id) {
+                        <tr (click)="selectCertification(cert)" [class.active]="selected?.id === cert.id">
+                            <td>{{ cert.name }}</td>
+                            <td>{{ prettyType(cert.certification_type) }}</td>
+                            <td>
+                                <span class="status-dot" [class]="statusDotClass(cert.validity_status)"></span>
+                                {{ prettyStatus(cert.validity_status) }}
+                            </td>
+                            <td>{{ cert.expires_on }}</td>
+                        </tr>
+                        }
+                        @if (filteredCertifications.length === 0) {
+                        <tr>
+                            <td colspan="4" class="empty">No certifications found</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="detail-column">
+            @if (!selected) {
+            <div class="placeholder-card">
+                <span class="material-icons">assignment</span>
+                <div class="title">Select a Certification from the list</div>
+                <div class="desc">Nothing is selected</div>
+            </div>
+            } @else {
+            <div class="detail-card">
+                <div class="detail-title">{{ selected.name }}</div>
+                <div class="detail-row"><span>Type</span><strong>{{ prettyType(selected.certification_type) }}</strong>
+                </div>
+                <div class="detail-row"><span>Category</span><strong>{{ selected.certification_category || 'N/A'
+                        }}</strong></div>
+                <div class="detail-row"><span>Validity</span><strong>{{ prettyStatus(selected.validity_status)
+                        }}</strong></div>
+                <div class="detail-row"><span>Expires On</span><strong>{{ selected.expires_on }}</strong></div>
+                <div class="detail-row"><span>Provider</span><strong>{{ selected.provider }}</strong></div>
+                <p class="desc">{{ selected.description || 'No additional description available.' }}</p>
+            </div>
+            }
+        </aside>
     </div>
-  }
+    }
 </div>
