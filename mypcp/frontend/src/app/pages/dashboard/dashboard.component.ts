@@ -2,7 +2,6 @@ import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MinPipe } from '../../pipes/min.pipe';
-import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { Router } from '@angular/router';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
@@ -10,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, MinPipe, ChatbotComponent],
+  imports: [CommonModule, FormsModule, MinPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -176,6 +175,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   openTraining(trainingId: string) {
     this.router.navigate(['/training', trainingId]);
+  }
+
+  goToCertifications() {
+    this.router.navigate(['/certifications']);
   }
 
   get hasOdysseyTiers(): boolean {

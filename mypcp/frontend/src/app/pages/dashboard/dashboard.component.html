@@ -14,8 +14,8 @@
       <button class="nav-btn" title="Trainings">
         <span class="material-icons">menu_book</span>
       </button>
-      <button class="nav-btn" title="Assessments">
-        <span class="material-icons">assignment</span>
+      <button class="nav-btn" title="Certifications" (click)="goToCertifications()">
+        <span class="material-icons">workspace_premium</span>
       </button>
     </nav>
     <button class="nav-btn logout-btn" (click)="logout()" title="Logout">
@@ -31,6 +31,7 @@
         <span class="brand-tag">MyPCP</span>
         <span class="brand-sep">|</span>
         <span class="brand-sub">Personal Competency Portal</span>
+        <button class="cert-link" (click)="goToCertifications()">Certifications</button>
       </div>
       @if (data) {
         <div class="topbar-user">
@@ -263,9 +264,6 @@
     </div>
   </main>
 </div>
-
-<!-- Floating chatbot -->
-<app-chatbot />
 
 <!-- PLE Assessment Popup -->
 @if (plePopup) {

@@ -57,7 +57,11 @@
               @if (msg.role === 'manager') {
                 <span class="msg-sender">{{ msg.sender }}</span>
               }
-              {{ msg.content }}
+              @if (msg.role === 'assistant') {
+                <div [innerHTML]="formatAssistantMessage(msg.content)"></div>
+              } @else {
+                {{ msg.content }}
+              }
             </div>
           </div>
         }

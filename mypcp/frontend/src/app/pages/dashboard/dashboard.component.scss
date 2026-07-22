@@ -59,6 +59,26 @@
 .brand-sep { color: #d1d5db; margin: 0 8px; }
 .brand-sub { font-size: 13px; color: #6b7280; }
 
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.cert-link {
+  margin-left: 14px;
+  border: none;
+  background: #eff6ff;
+  color: #0f3460;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: #dbeafe; }
+}
+
 .topbar-user {
   display: flex; align-items: center; gap: 6px;
   font-size: 14px; font-weight: 500; color: #374151; cursor: pointer;

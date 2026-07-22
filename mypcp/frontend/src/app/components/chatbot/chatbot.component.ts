@@ -50,6 +50,8 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   private roomId = '';
   private userName = '';
   private shouldScroll = false;
+  private certStep1Path = '/chat/cert-step-2.jpg';
+  private certStep2Path = '/chat/cert-step-1.png';
 
   constructor(private http: HttpClient) {}
 
@@ -226,6 +228,29 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   onKeydown(e: KeyboardEvent) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } }
+
+  formatAssistantMessage(content: string): string {
+    const escaped = this.escapeHtml(content || '');
+    const withBreaks = escaped.replace(/\n/g, '<br>');
+    return withBreaks
+      .replace(/\[\[CERT_STEP_1\]\]/g, this.stepImageHtml(1))
+      .replace(/\[\[CERT_STEP_2\]\]/g, this.stepImageHtml(2));
+  }
+
+  private stepImageHtml(step: 1 | 2): string {
+    const src = step === 1 ? this.certStep1Path : this.certStep2Path;
+    const caption = step === 1 ? 'Open ESM and use Manage MyPCP Certifications catalog.' : 'Select your action and submit ticket to GBS-HSE-MYPCP-L1.';
+    return `<div class="cert-step"><div class="cert-step-title">Step ${step}</div><img src="${src}" alt="Certification step ${step}" class="cert-step-img" /><div class="cert-step-caption">${caption}</div></div>`;
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   private scrollToBottom() {
     try { this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' }); } catch {}

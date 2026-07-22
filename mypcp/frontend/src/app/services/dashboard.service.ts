@@ -22,4 +22,12 @@ export class DashboardService {
   toggleAssessmentComplete(assessmentId: string) {
     return this.http.post<any>(`${API}/progress/assessment/${assessmentId}/complete`, {});
   }
+
+  getMyCertifications() {
+    return this.http.get<any>(`${API}/certifications/me`);
+  }
+
+  getCertificationDetail(certificationId: string) {
+    return this.http.get<any>(`${API}/certifications/${certificationId}`);
+  }
 }
